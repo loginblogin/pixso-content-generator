@@ -1,0 +1,21 @@
+{
+  "name": "Content filler",
+  "id": "af0398dd-709d-4944-86ed-4a2b25a8847c",
+  "api": "1.0.0",
+  "editorType": ["pixso"],
+  "main": "code.js",
+  "ui": "ui.html",
+  "menu": [
+    {
+      "name": "Content filler",
+      "command": "af0398dd-709d-4944-86ed-4a2b25a8847c"
+    }
+  ],
+  "relaunchButtons": [
+    {
+      "command": "af0398dd-709d-4944-86ed-4a2b25a8847c",
+      "name": "Content filler",
+      "multipleSelection": true
+    }
+  ]
+}

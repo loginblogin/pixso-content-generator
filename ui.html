@@ -1,0 +1,530 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    try {
+      window.localStorage.getItem('x')
+    } catch (e) {
+      const store = new Map()
+      const shim = {
+        getItem: (k) => (store.has(k) ? store.get(k) : null),
+        setItem: (k, v) => {
+          store.set(k, String(v))
+        },
+        removeItem: (k) => {
+          store.delete(k)
+        },
+        clear: () => {
+          store.clear()
+        },
+        key: (i) => Array.from(store.keys())[i] ?? null,
+        get length() {
+          return store.size
+        },
+      }
+      Object.defineProperty(window, 'localStorage', { value: shim, configurable: true })
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1f1f1f;
+      --muted: #8a8a8a;
+      --border: #e5e5e5;
+      --control-border: #d9d9d9;
+      --control-bg: #ffffff;
+      --disabled: #d9d9d9;
+      --blue: #0d99ff;
+      --blue-dark: #0b86df;
+      --radius: 8px;
+      --radius-lg: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-width: 0;
+      height: auto;
+      min-height: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    body {
+      overflow-x: hidden;
+    }
+
+    #plugin-root {
+      width: 100%;
+      min-width: 0;
+      background: var(--bg);
+    }
+
+    .content {
+      width: 100%;
+    }
+
+    .group {
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .group-title {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .field {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 30px;
+    }
+
+    .field + .field {
+      margin-top: 2px;
+    }
+
+    .field > label:first-child {
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .field-input {
+      align-items: start;
+      min-height: 42px;
+    }
+
+    .field-input > label:first-child {
+      padding-top: 7px;
+    }
+
+    .switch {
+      position: relative;
+      width: 30px;
+      height: 18px;
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #e4e4e4;
+      border: 1px solid #cfcfcf;
+      transition: background 120ms ease, border-color 120ms ease;
+      cursor: pointer;
+    }
+
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 2px;
+      top: 2px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.16);
+      transition: transform 120ms ease;
+    }
+
+    .switch input:checked + .switch-track {
+      background: var(--blue);
+      border-color: var(--blue-dark);
+    }
+
+    .switch input:checked + .switch-track::after {
+      transform: translateX(12px);
+    }
+
+    .switch input:focus-visible + .switch-track {
+      outline: 2px solid rgba(13, 153, 255, 0.35);
+      outline-offset: 2px;
+    }
+
+    .text-input,
+    .text-area {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--control-border);
+      background: var(--control-bg);
+      color: var(--text);
+      border-radius: var(--radius);
+      font: inherit;
+      font-size: 12px;
+      outline: none;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .text-input {
+      height: 32px;
+      padding: 0 9px;
+    }
+
+    .text-area {
+      min-height: 54px;
+      padding: 7px 9px;
+      resize: vertical;
+    }
+
+    .text-input:focus,
+    .text-area:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 1px var(--blue);
+    }
+
+    .text-input::placeholder,
+    .text-area::placeholder {
+      color: #9b9b9b;
+    }
+
+    .field-control {
+      width: min(100%, 300px);
+    }
+
+    .footer {
+      position: sticky;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-height: 54px;
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.96);
+      border-top: 1px solid var(--border);
+      backdrop-filter: blur(8px);
+    }
+
+    #status-fill {
+      min-width: 0;
+      color: var(--muted);
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .button {
+      min-width: 96px;
+      height: 32px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: var(--radius);
+      background: var(--blue);
+      color: #ffffff;
+      font: inherit;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 120ms ease, opacity 120ms ease;
+    }
+
+    .button:hover:not(:disabled) {
+      background: var(--blue-dark);
+    }
+
+    .button:disabled {
+      background: var(--disabled);
+      color: #ffffff;
+      cursor: default;
+    }
+
+    @media (max-width: 460px) {
+      .group {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .footer {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .field-control {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="plugin-root">
+    <main class="content">
+      <section class="group">
+        <h2 class="group-title">Заполнять</h2>
+
+        <div class="field"><label for="fill-news">Новость</label><label class="switch"><input id="fill-news" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-description">Описание</label><label class="switch"><input id="fill-description" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-time">Время</label><label class="switch"><input id="fill-time" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-datetime">Дата и время</label><label class="switch"><input id="fill-datetime" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-author">Автор</label><label class="switch"><input id="fill-author" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-category">Категория</label><label class="switch"><input id="fill-category" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-random">Число (*rnd)</label><label class="switch"><input id="fill-random" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-text">Текст (*text)</label><label class="switch"><input id="fill-text" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-quote">Цитата (*quote)</label><label class="switch"><input id="fill-quote" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-photo-desc">Подпись к фото (*photo-description)</label><label class="switch"><input id="fill-photo-desc" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-img">Картинка (*img)</label><label class="switch"><input id="fill-img" type="checkbox"><span class="switch-track"></span></label></div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">Дополнительно</h2>
+
+        <div class="field"><label for="fire-emoji">🔥 Fire emoji (20%)</label><label class="switch"><input id="fire-emoji" type="checkbox"><span class="switch-track"></span></label></div>
+        <div class="field"><label for="randomize-change">🔀 Randomize ***</label><label class="switch"><input id="randomize-change" type="checkbox"><span class="switch-track"></span></label></div>
+      </section>
+
+      <section class="group">
+        <h2 class="group-title">OpenAI</h2>
+
+        <div class="field"><label for="use-ai">🤖 AI заголовки</label><label class="switch"><input id="use-ai" type="checkbox"><span class="switch-track"></span></label></div>
+
+        <div class="field field-input">
+          <label for="api-key">API Key</label>
+          <div class="field-control">
+            <input id="api-key" class="text-input" type="password" value="" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="field field-input">
+          <label for="ai-prompt">Промпт</label>
+          <div class="field-control">
+            <textarea id="ai-prompt" class="text-area" rows="2" placeholder="Контекст для генерации..."></textarea>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <label id="status-fill">Select a frame</label>
+      <button id="action-fill" class="button" type="button" disabled>Fill content</button>
+    </footer>
+  </div>
+
+  <script>
+    // Report the shrink-wrapped panel height back to code.ts so it can resize
+    // the iframe. A ResizeObserver covers content/control changes; a
+    // MutationObserver catches the fill picker dialog opening/closing.
+    let lastReportedHeight = 0
+    let resizeRaf = 0
+
+    function measurePanelHeight() {
+      const root = document.getElementById('plugin-root')
+      if (!root) return 0
+      let h = Math.ceil(root.getBoundingClientRect().height)
+      const openDialog = document.querySelector('dialog.fig-fill-picker-dialog[open]')
+      if (openDialog) h = Math.max(h, Math.ceil(openDialog.getBoundingClientRect().bottom))
+      return h
+    }
+
+    function reportHeight() {
+      const h = measurePanelHeight()
+      if (h && h !== lastReportedHeight) {
+        lastReportedHeight = h
+        parent.postMessage({ pluginMessage: { type: 'resize', height: h } }, '*')
+      }
+    }
+
+    const pluginRoot = document.getElementById('plugin-root')
+    if (pluginRoot && typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(() => {
+        if (resizeRaf) cancelAnimationFrame(resizeRaf)
+        resizeRaf = requestAnimationFrame(reportHeight)
+      }).observe(pluginRoot)
+    }
+
+    new MutationObserver(() => {
+      if (resizeRaf) cancelAnimationFrame(resizeRaf)
+      resizeRaf = requestAnimationFrame(reportHeight)
+    }).observe(document.body, {
+      childList: true,
+      attributes: true,
+      attributeFilter: ['open'],
+      subtree: true,
+    })
+
+    function colorValue(id) {
+      const value = document.getElementById(id).value
+      const hex = String(value || '#000000FF').replace('#', '')
+      const read = (start, fallback) => {
+        const slice = hex.slice(start, start + 2)
+        const parsed = Number.parseInt(slice, 16)
+        return Number.isFinite(parsed) ? parsed / 255 : fallback
+      }
+      return { r: read(0, 0), g: read(2, 0), b: read(4, 0), a: hex.length >= 8 ? read(6, 1) : 1 }
+    }
+
+    function currentParams() {
+      return {
+        fireEmoji: document.getElementById('fire-emoji').checked === true,
+        randomizeChange: document.getElementById('randomize-change').checked === true,
+        fillNews: document.getElementById('fill-news').checked === true,
+        fillDescription: document.getElementById('fill-description').checked === true,
+        fillTime: document.getElementById('fill-time').checked === true,
+        fillDatetime: document.getElementById('fill-datetime').checked === true,
+        fillAuthor: document.getElementById('fill-author').checked === true,
+        fillCategory: document.getElementById('fill-category').checked === true,
+        fillRandom: document.getElementById('fill-random').checked === true,
+        fillText: document.getElementById('fill-text').checked === true,
+        fillQuote: document.getElementById('fill-quote').checked === true,
+        fillPhotoDesc: document.getElementById('fill-photo-desc').checked === true,
+        fillImg: document.getElementById('fill-img').checked === true,
+      }
+    }
+    // Persist API key in localStorage
+    const apiKeyInput = document.getElementById('api-key')
+    const savedKey = localStorage.getItem('openai-api-key')
+    if (savedKey) apiKeyInput.value = savedKey
+    apiKeyInput.addEventListener('input', () => {
+      localStorage.setItem('openai-api-key', apiKeyInput.value)
+    })
+
+    // Persist prompt in localStorage
+    const aiPromptInput = document.getElementById('ai-prompt')
+    const savedPrompt = localStorage.getItem('ai-prompt')
+    if (savedPrompt) aiPromptInput.value = savedPrompt
+    aiPromptInput.addEventListener('input', () => {
+      localStorage.setItem('ai-prompt', aiPromptInput.value)
+    })
+
+    // Persist AI toggle
+    const useAiSwitch = document.getElementById('use-ai')
+    if (localStorage.getItem('use-ai') === 'true') useAiSwitch.checked = true
+    useAiSwitch.addEventListener('change', () => {
+      localStorage.setItem('use-ai', useAiSwitch.checked ? 'true' : 'false')
+    })
+
+    async function fetchAiContent(apiKey, userPrompt) {
+      const promptContext = userPrompt ? (' Тематика: ' + userPrompt + '.') : ''
+      const systemMsg = 'Ты генератор контента для новостного сайта на русском языке.' + promptContext
+      const userMsg = 'Сгенерируй 25 уникальных заголовков новостей (70-110 символов каждый) и 15 подзаголовков (около 120 символов каждый). Заголовки должны быть реалистичными, разнообразными по тематике. Ответ верни строго в JSON формате без markdown:\n{"headlines":["..."],"descriptions":["..."]}'
+
+      const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: systemMsg },
+            { role: 'user', content: userMsg },
+          ],
+          temperature: 1.0,
+        }),
+      })
+      if (!resp.ok) {
+        const errText = await resp.text()
+        throw new Error('OpenAI API error: ' + resp.status + ' ' + errText)
+      }
+      const data = await resp.json()
+      const content = data.choices[0].message.content
+      // Parse JSON — strip possible markdown fences
+      const cleaned = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim()
+      const parsed = JSON.parse(cleaned)
+      return { headlines: parsed.headlines || [], descriptions: parsed.descriptions || [] }
+    }
+
+    const fillButton = document.getElementById('action-fill')
+    const statusLabel = document.getElementById('status-fill')
+
+    document.getElementById('action-fill').addEventListener('click', async () => {
+      const params = currentParams()
+      const useAi = document.getElementById('use-ai').checked === true
+      const apiKey = apiKeyInput.value.trim()
+
+      if (useAi && apiKey) {
+        fillButton.setAttribute('disabled', '')
+        fillButton.textContent = 'Генерация AI...'
+        statusLabel.textContent = 'Запрос к OpenAI...'
+        try {
+          const userPrompt = aiPromptInput.value.trim()
+          const ai = await fetchAiContent(apiKey, userPrompt)
+          statusLabel.textContent = 'Получено ' + ai.headlines.length + ' заголовков'
+          parent.postMessage({
+            pluginMessage: {
+              type: 'action', id: 'fill', params: params,
+              aiHeadlines: ai.headlines,
+              aiDescriptions: ai.descriptions,
+            }
+          }, '*')
+        } catch (err) {
+          statusLabel.textContent = 'Ошибка: ' + (err.message || err)
+          fillButton.removeAttribute('disabled')
+          fillButton.textContent = 'Fill content'
+        }
+      } else {
+        parent.postMessage({ pluginMessage: { type: 'action', id: 'fill', params: params } }, '*')
+      }
+    })
+
+
+
+    // Pixso sandbox cannot fetch remote images directly. Download in iframe and
+    // return bytes to code.ts, where pixso.createImage(Uint8Array) is available.
+    window.addEventListener('message', async (event) => {
+      const msg = event.data && event.data.pluginMessage
+      if (!msg || msg.type !== 'fetch-image' || !msg.requestId || !msg.url) return
+      try {
+        const response = await fetch(msg.url)
+        if (!response.ok) throw new Error('HTTP ' + response.status)
+        const bytes = new Uint8Array(await response.arrayBuffer())
+        parent.postMessage({ pluginMessage: { type: 'image-bytes', requestId: msg.requestId, bytes } }, '*')
+      } catch (error) {
+        const raw = String(error && error.message ? error.message : error)
+        const corsHint = raw === 'Failed to fetch' || /fetch/i.test(raw)
+          ? 'Не удалось скачать изображение. Для Pixso production UI (origin null) сервер картинки должен разрешать CORS, например Access-Control-Allow-Origin: *'
+          : raw
+        parent.postMessage({ pluginMessage: { type: 'image-bytes', requestId: msg.requestId, error: corsHint } }, '*')
+      }
+    })
+
+    // code.ts pushes per-action enabled state, button label, and status here on
+    // every selection change. addEventListener (not window.onmessage) so this
+    // coexists with the spatial/restore message handler.
+    window.addEventListener('message', (event) => {
+      const msg = event.data && event.data.pluginMessage
+      if (!msg || msg.type !== 'action-state' || !msg.actions) return
+      {
+        const a = msg.actions["fill"]
+        const button = document.getElementById('action-fill')
+        if (a && button) {
+          if (a.enabled === false) button.setAttribute('disabled', '')
+          else button.removeAttribute('disabled')
+          if (typeof a.label === 'string') button.textContent = a.label
+        }
+        const status = document.getElementById('status-fill')
+        if (a && status && typeof a.status === 'string') status.textContent = a.status
+      }
+    })
+
+  </script>
+</body>
+</html>
