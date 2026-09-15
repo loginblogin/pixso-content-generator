@@ -789,9 +789,45 @@ latestParams = initialParams;
 const html = __html__;
 pixso.root.setRelaunchData({ [TOOL_ID]: DISPLAY_NAME });
 pixso.showUI(html, { width: 280, height: 320 });
+async function pushSavedSettings() {
+    try {
+        const [apiKey, aiPrompt, useAi] = await Promise.all([
+            pixso.clientStorage.getAsync('openai-api-key'),
+            pixso.clientStorage.getAsync('ai-prompt'),
+            pixso.clientStorage.getAsync('use-ai'),
+        ]);
+        pixso.ui.postMessage({
+            type: 'saved-settings',
+            apiKey: typeof apiKey === 'string' ? apiKey : '',
+            aiPrompt: typeof aiPrompt === 'string' ? aiPrompt : '',
+            useAi: useAi === true,
+        });
+    }
+    catch (error) {
+        console.log('[Content filler][Pixso] failed to load client settings', error);
+    }
+}
+void pushSavedSettings();
 pushActionStates();
 pixso.on('selectionchange', refreshSelection);
-pixso.ui.onmessage = (msg) => {
+pixso.ui.onmessage = async (msg) => {
+    if (msg.type === 'request-settings') {
+        await pushSavedSettings();
+        return;
+    }
+    if (msg.type === 'save-settings') {
+        try {
+            await Promise.all([
+                pixso.clientStorage.setAsync('openai-api-key', msg.apiKey),
+                pixso.clientStorage.setAsync('ai-prompt', msg.aiPrompt),
+                pixso.clientStorage.setAsync('use-ai', msg.useAi),
+            ]);
+        }
+        catch (error) {
+            console.log('[Content filler][Pixso] failed to save client settings', error);
+        }
+        return;
+    }
     if (msg.type === 'image-bytes') {
         const pending = imageRequests.get(msg.requestId);
         if (!pending)

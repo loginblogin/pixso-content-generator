@@ -2,30 +2,7 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <script>
-    try {
-      window.localStorage.getItem('x')
-    } catch (e) {
-      const store = new Map()
-      const shim = {
-        getItem: (k) => (store.has(k) ? store.get(k) : null),
-        setItem: (k, v) => {
-          store.set(k, String(v))
-        },
-        removeItem: (k) => {
-          store.delete(k)
-        },
-        clear: () => {
-          store.clear()
-        },
-        key: (i) => Array.from(store.keys())[i] ?? null,
-        get length() {
-          return store.size
-        },
-      }
-      Object.defineProperty(window, 'localStorage', { value: shim, configurable: true })
-    }
-  </script>
+
   <style>
     :root {
       --bg: #ffffff;
@@ -397,28 +374,43 @@
         fillImg: document.getElementById('fill-img').checked === true,
       }
     }
-    // Persist API key in localStorage
+    // Persist OpenAI settings in Pixso clientStorage via the plugin sandbox.
+    // The UI runs with a null origin in production, so localStorage is not reliable.
     const apiKeyInput = document.getElementById('api-key')
-    const savedKey = localStorage.getItem('openai-api-key')
-    if (savedKey) apiKeyInput.value = savedKey
-    apiKeyInput.addEventListener('input', () => {
-      localStorage.setItem('openai-api-key', apiKeyInput.value)
-    })
-
-    // Persist prompt in localStorage
     const aiPromptInput = document.getElementById('ai-prompt')
-    const savedPrompt = localStorage.getItem('ai-prompt')
-    if (savedPrompt) aiPromptInput.value = savedPrompt
-    aiPromptInput.addEventListener('input', () => {
-      localStorage.setItem('ai-prompt', aiPromptInput.value)
+    const useAiSwitch = document.getElementById('use-ai')
+    let settingsLoaded = false
+    let saveTimer = 0
+
+    function saveAiSettings() {
+      if (!settingsLoaded) return
+      if (saveTimer) clearTimeout(saveTimer)
+      saveTimer = setTimeout(() => {
+        parent.postMessage({
+          pluginMessage: {
+            type: 'save-settings',
+            apiKey: apiKeyInput.value,
+            aiPrompt: aiPromptInput.value,
+            useAi: useAiSwitch.checked === true,
+          }
+        }, '*')
+      }, 250)
+    }
+
+    apiKeyInput.addEventListener('input', saveAiSettings)
+    aiPromptInput.addEventListener('input', saveAiSettings)
+    useAiSwitch.addEventListener('change', saveAiSettings)
+
+    window.addEventListener('message', (event) => {
+      const msg = event.data && event.data.pluginMessage
+      if (!msg || msg.type !== 'saved-settings') return
+      apiKeyInput.value = typeof msg.apiKey === 'string' ? msg.apiKey : ''
+      aiPromptInput.value = typeof msg.aiPrompt === 'string' ? msg.aiPrompt : ''
+      useAiSwitch.checked = msg.useAi === true
+      settingsLoaded = true
     })
 
-    // Persist AI toggle
-    const useAiSwitch = document.getElementById('use-ai')
-    if (localStorage.getItem('use-ai') === 'true') useAiSwitch.checked = true
-    useAiSwitch.addEventListener('change', () => {
-      localStorage.setItem('use-ai', useAiSwitch.checked ? 'true' : 'false')
-    })
+    parent.postMessage({ pluginMessage: { type: 'request-settings' } }, '*')
 
     async function fetchAiContent(apiKey, userPrompt) {
       const promptContext = userPrompt ? (' Тематика: ' + userPrompt + '.') : ''
