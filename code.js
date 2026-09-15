@@ -395,27 +395,27 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
         }
         function getContent(layerName, existingLen) {
             const n = layerName.toLowerCase();
-            if (n.includes('news-time'))
+            if (n.includes('*news-time'))
                 return null; // handled separately
-            if (n.includes('news') && params.fillNews)
+            if (n.includes('*news') && params.fillNews)
                 return pickAiNews() ?? generateNews();
-            if (n.includes('category-lenta') && params.fillCategory)
+            if (n.includes('*category-lenta') && params.fillCategory)
                 return pick(CATEGORIES_LENTA);
-            if (n.includes('category-gazeta') && params.fillCategory)
+            if (n.includes('*category-gazeta') && params.fillCategory)
                 return pick(CATEGORIES_GAZETA);
             if (n.includes('*photo-description') && params.fillPhotoDesc)
                 return generatePhotoDescription();
-            if (n.includes('description') && params.fillDescription)
+            if (n.includes('*description') && params.fillDescription)
                 return pickAiDesc() ?? generateDescription();
-            if (n.includes('author') && params.fillAuthor)
+            if (n.includes('*author') && params.fillAuthor)
                 return generateAuthor();
-            if (n.includes('article') && params.fillNews)
+            if (n.includes('*article') && params.fillNews)
                 return generateArticle();
-            if (n.includes('datetime-num') && params.fillDatetime)
+            if (n.includes('*datetime-num') && params.fillDatetime)
                 return randomDate() + ' ' + randomTime();
-            if (n.includes('date') && params.fillDatetime)
+            if (n.includes('*date') && params.fillDatetime)
                 return randomDate();
-            if (n.includes('time') && params.fillTime)
+            if (n.includes('*time') && params.fillTime)
                 return randomTime();
             if (n.includes('*quote') && params.fillQuote)
                 return generateQuote();
@@ -428,7 +428,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             }
             return null;
         }
-        const targets = ['news-time', 'news', 'category-lenta', 'category-gazeta', '*photo-description', 'description', 'author', 'article', 'date', 'time', 'datetime-num', 'rnd', '*text', '*quote'];
+        const targets = ['*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*article', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
         function isFontName(value) {
             return typeof value === 'object' && value !== null &&
                 typeof value.family === 'string' &&
@@ -663,7 +663,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 if (!isTarget) {
                     // skip text nodes that don't match
                 }
-                else if (nameLower.includes('news-time') && params.fillNews) {
+                else if (nameLower.includes('*news-time') && params.fillNews) {
                     await processNewsTime(node);
                 }
                 else {

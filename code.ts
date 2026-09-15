@@ -422,17 +422,17 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
 
     function getContent(layerName: string, existingLen: number): string | null {
       const n = layerName.toLowerCase()
-      if (n.includes('news-time')) return null // handled separately
-      if (n.includes('news') && params.fillNews) return pickAiNews() ?? generateNews()
-      if (n.includes('category-lenta') && params.fillCategory) return pick(CATEGORIES_LENTA)
-      if (n.includes('category-gazeta') && params.fillCategory) return pick(CATEGORIES_GAZETA)
+      if (n.includes('*news-time')) return null // handled separately
+      if (n.includes('*news') && params.fillNews) return pickAiNews() ?? generateNews()
+      if (n.includes('*category-lenta') && params.fillCategory) return pick(CATEGORIES_LENTA)
+      if (n.includes('*category-gazeta') && params.fillCategory) return pick(CATEGORIES_GAZETA)
       if (n.includes('*photo-description') && params.fillPhotoDesc) return generatePhotoDescription()
-      if (n.includes('description') && params.fillDescription) return pickAiDesc() ?? generateDescription()
-      if (n.includes('author') && params.fillAuthor) return generateAuthor()
-      if (n.includes('article') && params.fillNews) return generateArticle()
-      if (n.includes('datetime-num') && params.fillDatetime) return randomDate() + ' ' + randomTime()
-      if (n.includes('date') && params.fillDatetime) return randomDate()
-      if (n.includes('time') && params.fillTime) return randomTime()
+      if (n.includes('*description') && params.fillDescription) return pickAiDesc() ?? generateDescription()
+      if (n.includes('*author') && params.fillAuthor) return generateAuthor()
+      if (n.includes('*article') && params.fillNews) return generateArticle()
+      if (n.includes('*datetime-num') && params.fillDatetime) return randomDate() + ' ' + randomTime()
+      if (n.includes('*date') && params.fillDatetime) return randomDate()
+      if (n.includes('*time') && params.fillTime) return randomTime()
       if (n.includes('*quote') && params.fillQuote) return generateQuote()
       if (n.includes('*text') && params.fillText) return generateRandomText(Math.max(10, existingLen))
       if (params.fillRandom) {
@@ -441,7 +441,7 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
       }
       return null
     }
-    const targets = ['news-time', 'news', 'category-lenta', 'category-gazeta', '*photo-description', 'description', 'author', 'article', 'date', 'time', 'datetime-num', 'rnd', '*text', '*quote']
+    const targets = ['*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*article', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote']
 
     function isFontName(value: unknown): value is FontName {
       return typeof value === 'object' && value !== null &&
@@ -702,7 +702,7 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
         const isTarget = targets.some((t) => nameLower.includes(t))
         if (!isTarget) {
           // skip text nodes that don't match
-        } else if (nameLower.includes('news-time') && params.fillNews) {
+        } else if (nameLower.includes('*news-time') && params.fillNews) {
           await processNewsTime(node)
         } else {
           const len = node.characters.length
