@@ -64,6 +64,19 @@
       color: var(--text);
     }
 
+    summary.group-title { cursor: pointer; }
+    details:not([open]) > .group-title { margin-bottom: 0; }
+    .reset-button {
+      margin: 0 0 8px;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      cursor: pointer;
+    }
+
     .field {
       display: grid;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -254,8 +267,9 @@
 <body>
   <div id="plugin-root">
     <main class="content">
-      <section class="group">
-        <h2 class="group-title">Заполнять</h2>
+      <details class="group" open>
+        <summary class="group-title">Заполнять</summary>
+        <button id="toggle-all-fill" class="reset-button" type="button">Выключить все</button>
 
         <div class="field"><label for="fill-news">Новость</label><label class="switch"><input id="fill-news" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-description">Описание</label><label class="switch"><input id="fill-description" type="checkbox" checked><span class="switch-track"></span></label></div>
@@ -268,17 +282,25 @@
         <div class="field"><label for="fill-quote">Цитата (*quote)</label><label class="switch"><input id="fill-quote" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-photo-desc">Подпись к фото (*photo-description)</label><label class="switch"><input id="fill-photo-desc" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-img">Картинка (*img)</label><label class="switch"><input id="fill-img" type="checkbox"><span class="switch-track"></span></label></div>
-      </section>
+      </details>
 
-      <section class="group">
-        <h2 class="group-title">Дополнительно</h2>
+      <details class="group">
+        <summary class="group-title">Дополнительно</summary>
 
-        <div class="field"><label for="fire-emoji">🔥 Fire emoji (20%)</label><label class="switch"><input id="fire-emoji" type="checkbox"><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fire-emoji">Добавлять символ</label><label class="switch"><input id="fire-emoji" type="checkbox"><span class="switch-track"></span></label></div>
+        <div class="field field-input">
+          <label for="prefix-symbol">Символ</label>
+          <div class="field-control"><input id="prefix-symbol" class="text-input" type="text" value="🔥"></div>
+        </div>
+        <div class="field field-input">
+          <label for="prefix-probability">Вероятность, %</label>
+          <div class="field-control"><input id="prefix-probability" class="text-input" type="number" min="0" max="100" step="1" value="20"></div>
+        </div>
         <div class="field"><label for="randomize-change">🔀 Randomize ***</label><label class="switch"><input id="randomize-change" type="checkbox"><span class="switch-track"></span></label></div>
-      </section>
+      </details>
 
-      <section class="group">
-        <h2 class="group-title">OpenAI</h2>
+      <details class="group">
+        <summary class="group-title">OpenAI</summary>
 
         <div class="field"><label for="use-ai">🤖 AI заголовки</label><label class="switch"><input id="use-ai" type="checkbox"><span class="switch-track"></span></label></div>
 
@@ -295,7 +317,7 @@
             <textarea id="ai-prompt" class="text-area" rows="2" placeholder="Контекст для генерации..."></textarea>
           </div>
         </div>
-      </section>
+      </details>
     </main>
 
     <footer class="footer">
@@ -357,9 +379,27 @@
       return { r: read(0, 0), g: read(2, 0), b: read(4, 0), a: hex.length >= 8 ? read(6, 1) : 1 }
     }
 
+    const toggleAllFill = document.getElementById('toggle-all-fill')
+    const fillSwitches = Array.from(document.querySelectorAll('input[id^="fill-"][type="checkbox"]'))
+
+    function updateToggleAllLabel() {
+      toggleAllFill.textContent = fillSwitches.some(input => input.checked) ? 'Выключить все' : 'Включить все'
+    }
+
+    toggleAllFill.addEventListener('click', () => {
+      const enableAll = !fillSwitches.some(input => input.checked)
+      fillSwitches.forEach(input => { input.checked = enableAll })
+      updateToggleAllLabel()
+    })
+    fillSwitches.forEach(input => input.addEventListener('change', updateToggleAllLabel))
+    updateToggleAllLabel()
+
     function currentParams() {
       return {
         fireEmoji: document.getElementById('fire-emoji').checked === true,
+        prefixSymbol: document.getElementById('prefix-symbol').value.trim(),
+        prefixProbability: Number.isFinite(document.getElementById('prefix-probability').valueAsNumber)
+          ? Math.max(0, Math.min(100, document.getElementById('prefix-probability').valueAsNumber)) : 20,
         randomizeChange: document.getElementById('randomize-change').checked === true,
         fillNews: document.getElementById('fill-news').checked === true,
         fillDescription: document.getElementById('fill-description').checked === true,

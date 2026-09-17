@@ -1,6 +1,8 @@
 // Pixso-native build v3: *** instance + *** VARIANT randomized via InstanceNode.setProperties().
 type Params = {
   fireEmoji: boolean
+  prefixSymbol: string
+  prefixProbability: number
   randomizeChange: boolean
   fillNews: boolean
   fillDescription: boolean
@@ -23,7 +25,7 @@ type RunMsg =
 const TOOL_ID = "af0398dd-709d-4944-86ed-4a2b25a8847c"
 const DISPLAY_NAME = "Content filler"
 const DEFAULTS: Params = {
-  fireEmoji: false, randomizeChange: false,
+  fireEmoji: false, prefixSymbol: '🔥', prefixProbability: 20, randomizeChange: false,
   fillNews: true, fillDescription: true, fillTime: true,
   fillDatetime: true, fillAuthor: true, fillCategory: true,
   fillRandom: true, fillText: true, fillQuote: true, fillPhotoDesc: true, fillImg: false,
@@ -35,6 +37,8 @@ function normalizeParams(input: Partial<Params> | null | undefined): Params {
   if (input == null) return DEFAULTS
   const b = (key: keyof Params) => typeof input[key] === 'boolean' ? input[key] as boolean : DEFAULTS[key]
   return {
+    prefixSymbol: typeof input.prefixSymbol === 'string' ? input.prefixSymbol.trim() : DEFAULTS.prefixSymbol,
+    prefixProbability: typeof input.prefixProbability === 'number' && Number.isFinite(input.prefixProbability) ? Math.max(0, Math.min(100, input.prefixProbability)) : DEFAULTS.prefixProbability,
     fireEmoji: b('fireEmoji'), randomizeChange: b('randomizeChange'),
     fillNews: b('fillNews'), fillDescription: b('fillDescription'),
     fillTime: b('fillTime'), fillDatetime: b('fillDatetime'),
@@ -535,8 +539,8 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
         timeStyle = captureRangeStyle(node, 0, 1)
       }
 
-      const useFireEmoji = params.fireEmoji && Math.random() < 0.2
-      const firePrefix = useFireEmoji ? '🔥 ' : ''
+      const useFireEmoji = params.fireEmoji && Math.random() < params.prefixProbability / 100
+      const firePrefix = useFireEmoji && params.prefixSymbol ? params.prefixSymbol + ' ' : ''
       const newHeadline = firePrefix + (pickAiNews() ?? generateNews())
       const newTime = randomTime()
       const newText = newHeadline + '   ' + newTime
