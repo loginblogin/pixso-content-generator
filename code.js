@@ -348,41 +348,6 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 return fallback.slice(0, 90).replace(/\s+\S*$/, '');
             return fallback;
         }
-        const ARTICLE_STARTS = [
-            'Глобальное потепление продолжает оказывать значительное влияние на экосистемы планеты.',
-            'Искусственный интеллект стремительно меняет подходы к решению научных задач.',
-            'Цифровизация здравоохранения открывает новые горизонты для пациентов по всему миру.',
-            'Мировой рынок возобновляемой энергии демонстрирует устойчивый рост.',
-            'Современная архитектура всё чаще обращается к принципам устойчивого развития.',
-            'Космические исследования вступили в новую фазу международного сотрудничества.',
-            'Биотехнологии меняют представление о возможностях современной медицины.',
-            'Городская инфраструктура переживает масштабную цифровую трансформацию.',
-            'Океанология переживает период крупных открытий благодаря новым технологиям.',
-            'Сельское хозяйство адаптируется к изменениям климата с помощью инноваций.',
-        ];
-        const ARTICLE_MIDDLES = [
-            ' По данным последних исследований, эффективность новых методов выросла на сорок процентов за последний год.',
-            ' Эксперты прогнозируют, что в ближайшие десять лет эта область изменится кардинально.',
-            ' Крупнейшие компании инвестируют миллиарды в развитие этого направления.',
-            ' Международные организации поддерживают масштабные проекты в данной сфере.',
-            ' Новые стандарты безопасности позволяют ускорить внедрение передовых решений.',
-            ' Результаты пилотных проектов превзошли все ожидания аналитиков.',
-            ' Правительства многих стран разрабатывают программы поддержки инноваций.',
-            ' Учёные считают, что потенциал этих технологий ещё далеко не исчерпан.',
-        ];
-        const ARTICLE_ENDS = [
-            ' Это привело к ускоренному развитию смежных отраслей экономики.',
-            ' Компании по всему миру инвестируют в переобучение сотрудников.',
-            ' Электронные системы мониторинга улучшают качество контроля процессов.',
-            ' Инфраструктура для поддержки новых технологий расширяется рекордными темпами.',
-            ' Зелёные инициативы становятся неотъемлемой частью корпоративных стратегий.',
-            ' Специалисты ожидают дальнейшего снижения стоимости внедрения.',
-            ' Общественный интерес к теме растёт вместе с доступностью информации.',
-            ' Результаты первых испытаний будут опубликованы в ведущих научных журналах.',
-        ];
-        function generateArticle() {
-            return pick(ARTICLE_STARTS) + pick(ARTICLE_MIDDLES) + pick(ARTICLE_ENDS);
-        }
         function randomDate() {
             const d = Math.floor(Math.random() * 28) + 1;
             const m = Math.floor(Math.random() * 12) + 1;
@@ -615,8 +580,6 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 return pickAiDesc() ?? generateDescription();
             if (n.includes('*author') && params.fillAuthor)
                 return generateAuthor();
-            if (n.includes('*article') && params.fillNews)
-                return generateArticle();
             if (n.includes('*datetime-num') && params.fillDatetime)
                 return randomDate() + ' ' + randomTime();
             if (n.includes('*date') && params.fillDatetime)
@@ -634,7 +597,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             }
             return null;
         }
-        const targets = ['*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*article', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
+        const targets = ['*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
         function isFontName(value) {
             return typeof value === 'object' && value !== null &&
                 typeof value.family === 'string' &&
@@ -939,7 +902,6 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
         // Pixso's sandbox creates images from bytes. The UI iframe downloads the JPEG
         // (browser fetch is available there) and returns Uint8Array to the sandbox.
         if (imgNodesToFill.length > 0) {
-            let imgLoaded = 0;
             for (const imgNode of imgNodesToFill) {
                 const num = 1 + Math.floor(Math.random() * 220);
                 const padded = String(num).padStart(5, '0');
@@ -962,22 +924,12 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                             fillsArr.push({ type: 'IMAGE', scaleMode: 'FILL', imageHash: image.hash });
                         imgNode.fills = fillsArr;
                         affectedNodes.push(imgNode);
-                        imgLoaded++;
                     }
                 }
                 catch (error) {
                     console.log('[Content filler][Pixso] image load failed', url, error);
                 }
             }
-            if (imgLoaded > 0)
-                pixso.notify('Loaded ' + imgLoaded + ' image' + (imgLoaded > 1 ? 's' : ''));
-        }
-        const count = affectedNodes.length;
-        if (count === 0) {
-            pixso.notify('No matching layers found');
-        }
-        else {
-            pixso.notify('Filled ' + count + ' layer' + (count > 1 ? 's' : ''));
         }
     })();
     return { affectedNodes, state: null };
@@ -993,7 +945,7 @@ function requestImageBytes(url) {
 }
 let pendingAiHeadlines;
 let pendingAiDescriptions;
-async function runAction_fill(target, notify) {
+async function runAction_fill(target) {
     isExecuting = true;
     try {
         const result = await action_fill(latestParams, target, null, pendingAiHeadlines, pendingAiDescriptions);
@@ -1001,9 +953,6 @@ async function runAction_fill(target, notify) {
         pendingAiDescriptions = undefined;
         attachRelaunch(result.affectedNodes);
         pushActionStates();
-        if (notify) {
-            pixso.notify(DISPLAY_NAME + " ran");
-        }
     }
     catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -1094,7 +1043,7 @@ pixso.ui.onmessage = async (msg) => {
             latestParams = normalizeParams(msg.params);
             pendingAiHeadlines = msg.aiHeadlines;
             pendingAiDescriptions = msg.aiDescriptions;
-            void runAction_fill(target, true);
+            void runAction_fill(target);
             return;
         }
         return;
