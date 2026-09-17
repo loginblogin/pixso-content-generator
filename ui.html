@@ -272,6 +272,7 @@
         <button id="toggle-all-fill" class="reset-button" type="button">Выключить все</button>
 
         <div class="field"><label for="fill-news">Новость</label><label class="switch"><input id="fill-news" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-article">Статья</label><label class="switch"><input id="fill-article" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-description">Описание</label><label class="switch"><input id="fill-description" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-time">Время</label><label class="switch"><input id="fill-time" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-datetime">Дата и время</label><label class="switch"><input id="fill-datetime" type="checkbox" checked><span class="switch-track"></span></label></div>
@@ -402,6 +403,7 @@
           ? Math.max(0, Math.min(100, document.getElementById('prefix-probability').valueAsNumber)) : 20,
         randomizeChange: document.getElementById('randomize-change').checked === true,
         fillNews: document.getElementById('fill-news').checked === true,
+        fillArticle: document.getElementById('fill-article').checked === true,
         fillDescription: document.getElementById('fill-description').checked === true,
         fillTime: document.getElementById('fill-time').checked === true,
         fillDatetime: document.getElementById('fill-datetime').checked === true,

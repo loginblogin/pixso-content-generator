@@ -2,10 +2,212 @@ const TOOL_ID = "af0398dd-709d-4944-86ed-4a2b25a8847c";
 const DISPLAY_NAME = "Content filler";
 const DEFAULTS = {
     fireEmoji: false, prefixSymbol: '🔥', prefixProbability: 20, randomizeChange: false,
-    fillNews: true, fillDescription: true, fillTime: true,
+    fillArticle: true, fillNews: true, fillDescription: true, fillTime: true,
     fillDatetime: true, fillAuthor: true, fillCategory: true,
     fillRandom: true, fillText: true, fillQuote: true, fillPhotoDesc: true, fillImg: false,
 };
+const ARTICLE_TITLES = [
+    [
+        "Главные тренды осени в одежде:",
+        "что будут носить россияне"
+    ],
+    [
+        "Гардероб без лишних вещей:",
+        "как собрать образы на каждый день"
+    ],
+    [
+        "Новая жизнь старой квартиры:",
+        "идеи для обновления без ремонта"
+    ],
+    [
+        "Выходные за городом:",
+        "куда отправиться всей семьёй"
+    ],
+    [
+        "Уют начинается с деталей:",
+        "как преобразить комнату за один вечер"
+    ],
+    [
+        "Завтраки без спешки:",
+        "что приготовить за пятнадцать минут"
+    ],
+    [
+        "Большое путешествие налегке:",
+        "как уместить всё нужное в рюкзак"
+    ],
+    [
+        "Осень в большом городе:",
+        "где искать самые красивые маршруты"
+    ],
+    [
+        "Домашний сад на подоконнике:",
+        "какие растения подойдут новичкам"
+    ],
+    [
+        "Книги для дождливых вечеров:",
+        "истории, от которых сложно оторваться"
+    ],
+    [
+        "Кухня маленькой квартиры:",
+        "как найти место для всего необходимого"
+    ],
+    [
+        "Пора сменить обстановку:",
+        "идеи коротких поездок на выходные"
+    ],
+    [
+        "Стиль вне возраста:",
+        "как найти вещи, которые подходят именно вам"
+    ],
+    [
+        "Семейный ужин без хлопот:",
+        "простые блюда из привычных продуктов"
+    ],
+    [
+        "Вторая жизнь любимых вещей:",
+        "что можно обновить своими руками"
+    ],
+    [
+        "Город с другого ракурса:",
+        "как замечать красоту на обычной прогулке"
+    ],
+    [
+        "Дом, в который хочется вернуться:",
+        "простые способы добавить уюта"
+    ],
+    [
+        "Чемодан для отпуска:",
+        "какие вещи пригодятся у моря и в горах"
+    ],
+    [
+        "Вкус детства на новой кухне:",
+        "как приготовить знакомые блюда иначе"
+    ],
+    [
+        "Рабочее место дома:",
+        "как организовать удобный уголок для своих дел"
+    ],
+    [
+        "Прогулки с характером:",
+        "что посмотреть вдали от туристических улиц"
+    ],
+    [
+        "Свет меняет всё:",
+        "как подобрать освещение для разных комнат"
+    ],
+    [
+        "Подарки с личной историей:",
+        "чем порадовать близких без лишних трат"
+    ],
+    [
+        "Один жакет — пять образов:",
+        "как разнообразить повседневный гардероб"
+    ],
+    [
+        "Урожай на маленьком балконе:",
+        "что можно вырастить в городских условиях"
+    ],
+    [
+        "Вечер без экрана:",
+        "чем заняться дома одному или в компании"
+    ],
+    [
+        "Порядок без больших усилий:",
+        "как сделать хранение вещей удобнее"
+    ],
+    [
+        "Красота простых материалов:",
+        "как использовать дерево и лён в интерьере"
+    ],
+    [
+        "Путешествие по родному краю:",
+        "места, которые стоит увидеть своими глазами"
+    ],
+    [
+        "Обед с собой:",
+        "идеи блюд, которые удобно взять на работу"
+    ],
+    [
+        "Новый взгляд на классику:",
+        "как носить белую рубашку этой осенью"
+    ],
+    [
+        "Музыка для любого настроения:",
+        "как собрать свою идеальную подборку"
+    ],
+    [
+        "Фотографии, которые хочется сохранить:",
+        "как снимать повседневную жизнь"
+    ],
+    [
+        "Маленькая прихожая:",
+        "решения, которые помогут освободить пространство"
+    ],
+    [
+        "Чайная пауза:",
+        "что испечь к встрече с друзьями"
+    ],
+    [
+        "Каникулы с приключениями:",
+        "как придумать интересный маршрут для детей"
+    ],
+    [
+        "Винтаж в современном доме:",
+        "как сочетать старые вещи с новой мебелью"
+    ],
+    [
+        "Лёгкость в каждой детали:",
+        "как выбрать одежду для летних прогулок"
+    ],
+    [
+        "Домашний кинотеатр:",
+        "что понадобится для уютного вечера с фильмом"
+    ],
+    [
+        "Сезон тёплых шарфов:",
+        "какие цвета добавят настроения в пасмурный день"
+    ],
+    [
+        "Неспешное утро выходного дня:",
+        "маленькие ритуалы для хорошего настроения"
+    ],
+    [
+        "Маршрут без автомобиля:",
+        "куда можно отправиться на электричке"
+    ],
+    [
+        "Знакомые овощи по-новому:",
+        "идеи необычных гарниров на каждый день"
+    ],
+    [
+        "Балкон вместо кладовки:",
+        "как обустроить небольшое место для отдыха"
+    ],
+    [
+        "Творчество после работы:",
+        "какое хобби попробовать этой осенью"
+    ],
+    [
+        "Одежда для переменчивой погоды:",
+        "как собрать удобный многослойный образ"
+    ],
+    [
+        "Встреча за большим столом:",
+        "как устроить домашний праздник без суеты"
+    ],
+    [
+        "Заметки из путешествий:",
+        "как сохранить впечатления после возвращения"
+    ],
+    [
+        "Полка с любимыми историями:",
+        "как организовать небольшую домашнюю библиотеку"
+    ],
+    [
+        "Цвет в повседневной жизни:",
+        "как добавить яркие акценты в одежду и интерьер"
+    ]
+];
 let latestParams = DEFAULTS;
 let isExecuting = false;
 function normalizeParams(input) {
@@ -16,7 +218,7 @@ function normalizeParams(input) {
         prefixSymbol: typeof input.prefixSymbol === 'string' ? input.prefixSymbol.trim() : DEFAULTS.prefixSymbol,
         prefixProbability: typeof input.prefixProbability === 'number' && Number.isFinite(input.prefixProbability) ? Math.max(0, Math.min(100, input.prefixProbability)) : DEFAULTS.prefixProbability,
         fireEmoji: b('fireEmoji'), randomizeChange: b('randomizeChange'),
-        fillNews: b('fillNews'), fillDescription: b('fillDescription'),
+        fillArticle: b('fillArticle'), fillNews: b('fillNews'), fillDescription: b('fillDescription'),
         fillTime: b('fillTime'), fillDatetime: b('fillDatetime'),
         fillAuthor: b('fillAuthor'), fillCategory: b('fillCategory'),
         fillRandom: b('fillRandom'), fillText: b('fillText'), fillQuote: b('fillQuote'), fillPhotoDesc: b('fillPhotoDesc'), fillImg: b('fillImg'),
@@ -397,6 +599,8 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
         }
         function getContent(layerName, existingLen) {
             const n = layerName.toLowerCase();
+            if (n.includes('*article-title-description'))
+                return null; // handled separately
             if (n.includes('*news-time'))
                 return null; // handled separately
             if (n.includes('*news') && params.fillNews)
@@ -430,7 +634,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             }
             return null;
         }
-        const targets = ['*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*article', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
+        const targets = ['*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*article', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
         function isFontName(value) {
             return typeof value === 'object' && value !== null &&
                 typeof value.family === 'string' &&
@@ -448,14 +652,14 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             for (const fn of rangeFonts) {
                 if (!isFontName(fn))
                     continue;
-                fonts.set(fn.family + '|' + fn.style, fn);
+                fonts.set(fn.family + '|' + fn.style, { family: fn.family, style: fn.style });
             }
             // Defensive fallback for files imported from Figma / unusual Pixso text.
             // Some documents can report an empty list although fontName is concrete.
             if (fonts.size === 0) {
                 const fn = node.fontName;
                 if (isFontName(fn))
-                    fonts.set(fn.family + '|' + fn.style, fn);
+                    fonts.set(fn.family + '|' + fn.style, { family: fn.family, style: fn.style });
             }
             for (const fn of fonts.values()) {
                 await pixso.loadFontAsync(fn);
@@ -464,10 +668,10 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
         function concreteFontForRange(node, start, end) {
             const direct = node.getRangeFontName(start, end);
             if (isFontName(direct))
-                return direct;
+                return { family: direct.family, style: direct.style };
             const fonts = node.getRangeAllFontNames(start, end);
             const first = fonts.find(isFontName);
-            return first ?? null;
+            return first ? { family: first.family, style: first.style } : null;
         }
         function captureRangeStyle(node, start, end) {
             const fontSize = node.getRangeFontSize(start, end);
@@ -493,6 +697,41 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 node.setRangeLetterSpacing(start, end, style.letterSpacing);
             if (style.lineHeight != null)
                 node.setRangeLineHeight(start, end, style.lineHeight);
+        }
+        async function processArticleTitle(node) {
+            const len = node.characters.length;
+            if (len === 0)
+                return;
+            await loadAllFontsForNode(node);
+            // Do not pass Pixso's extra font hash back to setRangeFontName:
+            // it can resolve Medium to Black even when the style field is correct.
+            const firstStyle = captureRangeStyle(node, 0, 1);
+            const secondStyle = captureRangeStyle(node, len - 1, len);
+            const captureExtra = (start) => ({
+                textStyleId: node.getRangeTextStyleId(start, start + 1),
+                fillStyleId: node.getRangeFillStyleId(start, start + 1),
+                textCase: node.getRangeTextCase(start, start + 1),
+                textDecoration: node.getRangeTextDecoration(start, start + 1),
+            });
+            const firstExtra = captureExtra(0);
+            const secondExtra = captureExtra(len - 1);
+            const [first, second] = pick(ARTICLE_TITLES);
+            const firstPart = first + ' ';
+            node.characters = firstPart + second;
+            const restore = (start, end, style, extra) => {
+                if (typeof extra.textStyleId === 'string')
+                    node.setRangeTextStyleId(start, end, extra.textStyleId);
+                if (typeof extra.fillStyleId === 'string')
+                    node.setRangeFillStyleId(start, end, extra.fillStyleId);
+                applyRangeStyle(node, start, end, style);
+                if (typeof extra.textCase === 'string')
+                    node.setRangeTextCase(start, end, extra.textCase);
+                if (typeof extra.textDecoration === 'string')
+                    node.setRangeTextDecoration(start, end, extra.textDecoration);
+            };
+            restore(0, firstPart.length, firstStyle, firstExtra);
+            restore(firstPart.length, node.characters.length, secondStyle, secondExtra);
+            affectedNodes.push(node);
         }
         async function processNewsTime(node) {
             const len = node.characters.length;
@@ -664,6 +903,10 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 const isTarget = targets.some((t) => nameLower.includes(t));
                 if (!isTarget) {
                     // skip text nodes that don't match
+                }
+                else if (nameLower.includes('*article-title-description')) {
+                    if (params.fillArticle)
+                        await processArticleTitle(node);
                 }
                 else if (nameLower.includes('*news-time') && params.fillNews) {
                     await processNewsTime(node);
