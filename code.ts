@@ -4,6 +4,9 @@ type Params = {
   prefixSymbol: string
   prefixProbability: number
   randomizeChange: boolean
+  fillTeamBox: boolean
+  fillTeamTennis: boolean
+  fillTeamSoccer: boolean
   fillAnons: boolean
   fillArticle: boolean
   fillNews: boolean
@@ -28,10 +31,140 @@ const TOOL_ID = "af0398dd-709d-4944-86ed-4a2b25a8847c"
 const DISPLAY_NAME = "Content filler"
 const DEFAULTS: Params = {
   fireEmoji: false, prefixSymbol: '🔥', prefixProbability: 20, randomizeChange: false,
-  fillAnons: true, fillArticle: true, fillNews: true, fillDescription: true, fillTime: true,
+  fillTeamBox: true, fillTeamTennis: true, fillTeamSoccer: true, fillAnons: true, fillArticle: true, fillNews: true, fillDescription: true, fillTime: true,
   fillDatetime: true, fillAuthor: true, fillCategory: true,
   fillRandom: true, fillText: true, fillQuote: true, fillPhotoDesc: true, fillImg: false,
 }
+const BOXERS: string[] = [
+  "Али Мухаммед",
+  "Тайсон Майк",
+  "Холифилд Эвандер",
+  "Льюис Леннокс",
+  "Кличко Владимир",
+  "Кличко Виталий",
+  "Усик Александр",
+  "Фьюри Тайсон",
+  "Джошуа Энтони",
+  "Уайлдер Деонтей",
+  "Форман Джордж",
+  "Фрейзер Джо",
+  "Листон Сонни",
+  "Луис Джо",
+  "Марчиано Рокки",
+  "Демпси Джек",
+  "Холмс Ларри",
+  "Нортон Кен",
+  "Паттерсон Флойд",
+  "Боу Риддик",
+  "Поветкин Александр",
+  "Валуев Николай",
+  "Чагаев Руслан",
+  "Ибрагимов Султан",
+  "Мэйвезер Флойд",
+  "Пакьяо Мэнни",
+  "Леонард Рэй",
+  "Хирнс Томас",
+  "Хаглер Марвин",
+  "Дюран Роберто",
+  "Де Ла Хойя Оскар",
+  "Тринидад Феликс",
+  "Котто Мигель",
+  "Мосли Шейн",
+  "Уитакер Пернелл",
+  "Чавес Хулио Сесар",
+  "Маркес Хуан Мануэль",
+  "Баррера Марко Антонио",
+  "Моралес Эрик",
+  "Альварес Сауль",
+  "Головкин Геннадий",
+  "Бетербиев Артур",
+  "Бивол Дмитрий",
+  "Ковалёв Сергей",
+  "Цзю Константин",
+  "Ломаченко Василий",
+  "Кроуфорд Теренс",
+  "Иноуэ Наоя",
+  "Уорд Андре",
+  "Хопкинс Бернард"
+]
+
+const TENNIS_PLAYERS: string[] = [
+  "Федерер Роджер",
+  "Надаль Рафаэль",
+  "Джокович Новак",
+  "Маррей Энди",
+  "Сампрас Пит",
+  "Агасси Андре",
+  "Борг Бьорн",
+  "Маккинрой Джон",
+  "Коннорс Джимми",
+  "Беккер Борис",
+  "Эдберг Стефан",
+  "Лендл Иван",
+  "Хьюитт Ллейтон",
+  "Роддик Энди",
+  "Сафин Марат",
+  "Кафельников Евгений",
+  "Медведев Даниил",
+  "Рублёв Андрей",
+  "Хачанов Карен",
+  "Алькарас Карлос",
+  "Синнер Янник",
+  "Зверев Александр",
+  "Циципас Стефанос",
+  "Вавринка Стэн",
+  "Тим Доминик",
+  "Уильямс Серена",
+  "Уильямс Винус",
+  "Шарапова Мария",
+  "Граф Штеффи",
+  "Навратилова Мартина",
+  "Эверт Крис",
+  "Селеш Моника",
+  "Хингис Мартина",
+  "Энен Жюстин",
+  "Клейстерс Ким",
+  "Дэвенпорт Линдсей",
+  "Каприати Дженнифер",
+  "Моресмо Амели",
+  "Кузнецова Светлана",
+  "Дементьева Елена",
+  "Сафина Динара",
+  "Мыскина Анастасия",
+  "Звонарёва Вера",
+  "Азаренко Виктория",
+  "Соболенко Арина",
+  "Швёнтек Ига",
+  "Осака Наоми",
+  "Гауфф Кори",
+  "Халеп Симона",
+  "Квитова Петра"
+]
+
+// Premier League 2026/27; update the list when season membership changes.
+const SOCCER_TEAMS: string[] = [
+  "Арсенал",
+  "Астон Вилла",
+  "Борнмут",
+  "Брентфорд",
+  "Брайтон энд Хоув Альбион",
+  "Челси",
+  "Ковентри Сити",
+  "Кристал Пэлас",
+  "Эвертон",
+  "Фулхэм",
+  "Халл Сити",
+  "Ипсвич Таун",
+  "Лидс Юнайтед",
+  "Ливерпуль",
+  "Манчестер Сити",
+  "Манчестер Юнайтед",
+  "Ньюкасл Юнайтед",
+  "Ноттингем Форест",
+  "Сандерленд",
+  "Тоттенхэм Хотспур"
+]
+
 const ANNOUNCEMENTS: string[] = [
   "Города готовятся к сильным ливням. Почему улицы уходят под воду и можно ли защитить дома от затопления?",
   "Цены на квартиры снова обсуждают все. Стоит ли покупать жильё сейчас или лучше подождать перемен?",
@@ -501,7 +634,7 @@ function normalizeParams(input: Partial<Params> | null | undefined): Params {
     prefixSymbol: typeof input.prefixSymbol === 'string' ? input.prefixSymbol.trim() : DEFAULTS.prefixSymbol,
     prefixProbability: typeof input.prefixProbability === 'number' && Number.isFinite(input.prefixProbability) ? Math.max(0, Math.min(100, input.prefixProbability)) : DEFAULTS.prefixProbability,
     fireEmoji: b('fireEmoji'), randomizeChange: b('randomizeChange'),
-    fillAnons: b('fillAnons'), fillArticle: b('fillArticle'), fillNews: b('fillNews'), fillDescription: b('fillDescription'),
+    fillTeamBox: b('fillTeamBox'), fillTeamTennis: b('fillTeamTennis'), fillTeamSoccer: b('fillTeamSoccer'), fillAnons: b('fillAnons'), fillArticle: b('fillArticle'), fillNews: b('fillNews'), fillDescription: b('fillDescription'),
     fillTime: b('fillTime'), fillDatetime: b('fillDatetime'),
     fillAuthor: b('fillAuthor'), fillCategory: b('fillCategory'),
     fillRandom: b('fillRandom'), fillText: b('fillText'), fillQuote: b('fillQuote'), fillPhotoDesc: b('fillPhotoDesc'), fillImg: b('fillImg'),
@@ -851,6 +984,9 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
 
     function getContent(layerName: string, existingLen: number): string | null {
       const n = layerName.toLowerCase()
+      if (n.includes('*team-box')) return params.fillTeamBox ? pick(BOXERS) : null
+      if (n.includes('*team-tennis')) return params.fillTeamTennis ? pick(TENNIS_PLAYERS) : null
+      if (n.includes('*team-soccer')) return params.fillTeamSoccer ? pick(SOCCER_TEAMS) : null
       if (n.includes('*anons')) return params.fillAnons ? pick(ANNOUNCEMENTS) : null
       if (n.includes('*article-title-description')) return null // handled separately
       if (n.includes('*news-time')) return null // handled separately
@@ -871,7 +1007,7 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
       }
       return null
     }
-    const targets = ['*anons', '*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote']
+    const targets = ['*team-box', '*team-tennis', '*team-soccer', '*anons', '*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote']
 
     function isFontName(value: unknown): value is FontName {
       return typeof value === 'object' && value !== null &&
@@ -1131,8 +1267,24 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
         return
       }
 
+      // Pixso can silently ignore a partial variant combination. Include
+      // unchanged variant axes (such as Size) whenever changing a variant.
+      const propertiesToApply = { ...changes }
+      if (Object.keys(changes).some(key => props[key]?.type === 'VARIANT')) {
+        for (const key of Object.keys(props)) {
+          if (props[key].type === 'VARIANT' && !(key in propertiesToApply)) {
+            propertiesToApply[key] = String(props[key].value)
+          }
+        }
+      }
+
       try {
-        instance.setProperties(changes)
+        instance.setProperties(propertiesToApply)
+        const actual = instance.componentProperties || {}
+        const unapplied = Object.keys(propertiesToApply).filter(key => actual[key]?.value !== propertiesToApply[key])
+        if (unapplied.length > 0) {
+          throw new Error('Не удалось изменить свойства ' + instance.name + ': ' + unapplied.join(', '))
+        }
         affectedNodes.push(instance)
 
         console.log('[Rambler-Content][Pixso] Applied *** properties', {
@@ -1145,6 +1297,7 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
           changes,
           error: error instanceof Error ? error.message : String(error),
         })
+        throw error
       }
     }
 

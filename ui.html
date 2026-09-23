@@ -267,7 +267,7 @@
 <body>
   <div id="plugin-root">
     <main class="content">
-      <details class="group" open>
+      <details class="group" id="fill-group" open>
         <summary class="group-title">Заполнять</summary>
         <button id="toggle-all-fill" class="reset-button" type="button">Выключить все</button>
 
@@ -284,6 +284,14 @@
         <div class="field"><label for="fill-quote">Цитата (*quote)</label><label class="switch"><input id="fill-quote" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-photo-desc">Подпись к фото (*photo-description)</label><label class="switch"><input id="fill-photo-desc" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-img">Картинка (*img)</label><label class="switch"><input id="fill-img" type="checkbox"><span class="switch-track"></span></label></div>
+      </details>
+
+      <details class="group" id="sport-group">
+        <summary class="group-title">Спорт</summary>
+        <button id="toggle-all-sport" class="reset-button" type="button">Выключить все</button>
+        <div class="field"><label for="fill-team-soccer">Футбол</label><label class="switch"><input id="fill-team-soccer" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-team-tennis">Теннис</label><label class="switch"><input id="fill-team-tennis" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-team-box">Бокс</label><label class="switch"><input id="fill-team-box" type="checkbox" checked><span class="switch-track"></span></label></div>
       </details>
 
       <details class="group">
@@ -381,20 +389,22 @@
       return { r: read(0, 0), g: read(2, 0), b: read(4, 0), a: hex.length >= 8 ? read(6, 1) : 1 }
     }
 
-    const toggleAllFill = document.getElementById('toggle-all-fill')
-    const fillSwitches = Array.from(document.querySelectorAll('input[id^="fill-"][type="checkbox"]'))
-
-    function updateToggleAllLabel() {
-      toggleAllFill.textContent = fillSwitches.some(input => input.checked) ? 'Выключить все' : 'Включить все'
+    function setupGroupToggle(buttonId, groupId) {
+      const button = document.getElementById(buttonId)
+      const switches = Array.from(document.getElementById(groupId).querySelectorAll('input[type="checkbox"]'))
+      function updateLabel() {
+        button.textContent = switches.some(input => input.checked) ? 'Выключить все' : 'Включить все'
+      }
+      button.addEventListener('click', () => {
+        const enableAll = !switches.some(input => input.checked)
+        switches.forEach(input => { input.checked = enableAll })
+        updateLabel()
+      })
+      switches.forEach(input => input.addEventListener('change', updateLabel))
+      updateLabel()
     }
-
-    toggleAllFill.addEventListener('click', () => {
-      const enableAll = !fillSwitches.some(input => input.checked)
-      fillSwitches.forEach(input => { input.checked = enableAll })
-      updateToggleAllLabel()
-    })
-    fillSwitches.forEach(input => input.addEventListener('change', updateToggleAllLabel))
-    updateToggleAllLabel()
+    setupGroupToggle('toggle-all-fill', 'fill-group')
+    setupGroupToggle('toggle-all-sport', 'sport-group')
 
     function currentParams() {
       return {
@@ -404,6 +414,9 @@
           ? Math.max(0, Math.min(100, document.getElementById('prefix-probability').valueAsNumber)) : 20,
         randomizeChange: document.getElementById('randomize-change').checked === true,
         fillNews: document.getElementById('fill-news').checked === true,
+        fillTeamBox: document.getElementById('fill-team-box').checked === true,
+        fillTeamTennis: document.getElementById('fill-team-tennis').checked === true,
+        fillTeamSoccer: document.getElementById('fill-team-soccer').checked === true,
         fillAnons: document.getElementById('fill-anons').checked === true,
         fillArticle: document.getElementById('fill-article').checked === true,
         fillDescription: document.getElementById('fill-description').checked === true,
