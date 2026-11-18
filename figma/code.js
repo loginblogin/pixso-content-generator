@@ -1,11 +1,84 @@
+"use strict";
 const TOOL_ID = "af0398dd-709d-4944-86ed-4a2b25a8847c";
 const DISPLAY_NAME = "Content filler";
 const DEFAULTS = {
     fireEmoji: false, prefixSymbol: '🔥', prefixProbability: 20, randomizeChange: false,
-    fillTeamBox: true, fillTeamTennis: true, fillTeamSoccer: true, fillAnons: true, fillArticle: true, fillNews: true, fillDescription: true, fillTime: true,
+    fillTeamBox: true, fillTeamTennis: true, fillTeamSoccer: true, fillCountry: true, fillAnons: true, fillArticle: true, fillNews: true, fillDescription: true, fillTime: true,
     fillDatetime: true, fillAuthor: true, fillCategory: true,
     fillRandom: true, fillText: true, fillQuote: true, fillPhotoDesc: true, fillImg: false,
 };
+const COUNTRIES = [
+    "Россия",
+    "Беларусь",
+    "Казахстан",
+    "Армения",
+    "Грузия",
+    "Азербайджан",
+    "Узбекистан",
+    "Кыргызстан",
+    "Таджикистан",
+    "Монголия",
+    "Китай",
+    "Япония",
+    "Южная Корея",
+    "Индия",
+    "Индонезия",
+    "Таиланд",
+    "Вьетнам",
+    "Малайзия",
+    "Сингапур",
+    "Филиппины",
+    "Турция",
+    "Египет",
+    "Марокко",
+    "Тунис",
+    "Кения",
+    "ЮАР",
+    "Нигерия",
+    "Гана",
+    "Сенегал",
+    "Эфиопия",
+    "Германия",
+    "Франция",
+    "Италия",
+    "Испания",
+    "Португалия",
+    "Великобритания",
+    "Ирландия",
+    "Нидерланды",
+    "Бельгия",
+    "Швейцария",
+    "Австрия",
+    "Швеция",
+    "Норвегия",
+    "Финляндия",
+    "Дания",
+    "Исландия",
+    "Польша",
+    "Чехия",
+    "Словакия",
+    "Венгрия",
+    "Греция",
+    "Сербия",
+    "Хорватия",
+    "Словения",
+    "Болгария",
+    "Румыния",
+    "США",
+    "Канада",
+    "Мексика",
+    "Бразилия",
+    "Аргентина",
+    "Чили",
+    "Уругвай",
+    "Перу",
+    "Колумбия",
+    "Эквадор",
+    "Коста-Рика",
+    "Панама",
+    "Австралия",
+    "Новая Зеландия"
+];
 const BOXERS = [
     "Али Мухаммед",
     "Тайсон Майк",
@@ -599,7 +672,7 @@ function normalizeParams(input) {
         prefixSymbol: typeof input.prefixSymbol === 'string' ? input.prefixSymbol.trim() : DEFAULTS.prefixSymbol,
         prefixProbability: typeof input.prefixProbability === 'number' && Number.isFinite(input.prefixProbability) ? Math.max(0, Math.min(100, input.prefixProbability)) : DEFAULTS.prefixProbability,
         fireEmoji: b('fireEmoji'), randomizeChange: b('randomizeChange'),
-        fillTeamBox: b('fillTeamBox'), fillTeamTennis: b('fillTeamTennis'), fillTeamSoccer: b('fillTeamSoccer'), fillAnons: b('fillAnons'), fillArticle: b('fillArticle'), fillNews: b('fillNews'), fillDescription: b('fillDescription'),
+        fillTeamBox: b('fillTeamBox'), fillTeamTennis: b('fillTeamTennis'), fillTeamSoccer: b('fillTeamSoccer'), fillCountry: b('fillCountry'), fillAnons: b('fillAnons'), fillArticle: b('fillArticle'), fillNews: b('fillNews'), fillDescription: b('fillDescription'),
         fillTime: b('fillTime'), fillDatetime: b('fillDatetime'),
         fillAuthor: b('fillAuthor'), fillCategory: b('fillCategory'),
         fillRandom: b('fillRandom'), fillText: b('fillText'), fillQuote: b('fillQuote'), fillPhotoDesc: b('fillPhotoDesc'), fillImg: b('fillImg'),
@@ -615,7 +688,7 @@ function attachRelaunch(nodes) {
             node.setRelaunchData({ [TOOL_ID]: DISPLAY_NAME });
     }
     else {
-        pixso.root.setRelaunchData({ [TOOL_ID]: DISPLAY_NAME });
+        figma.root.setRelaunchData({ [TOOL_ID]: DISPLAY_NAME });
     }
 }
 function status_fill(_selection, enabled) {
@@ -625,14 +698,15 @@ function evaluateEnabled_fill(selection) {
     return (selection.length >= 1);
 }
 function actionTarget_fill() {
-    const selection = pixso.currentPage.selection;
+    var _a;
+    const selection = figma.currentPage.selection;
     if (!evaluateEnabled_fill(selection))
         return null;
-    return selection.length >= 1 ? (selection[0] ?? null) : null;
+    return selection.length >= 1 ? ((_a = selection[0]) !== null && _a !== void 0 ? _a : null) : null;
 }
 async function action_fill(params, target, _previousState, aiHeadlines, aiDescriptions) {
     const affectedNodes = target != null ? [target] : [];
-    const selection = pixso.currentPage.selection;
+    const selection = figma.currentPage.selection;
     await (async () => {
         if (target == null)
             return;
@@ -647,14 +721,14 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 return null;
             const item = aiNewsPool[aiNewsIndex % aiNewsPool.length];
             aiNewsIndex++;
-            return item ?? null;
+            return item !== null && item !== void 0 ? item : null;
         }
         function pickAiDesc() {
             if (aiDescPool.length === 0)
                 return null;
             const item = aiDescPool[aiDescIndex % aiDescPool.length];
             aiDescIndex++;
-            return item ?? null;
+            return item !== null && item !== void 0 ? item : null;
         }
         const SUBJECTS = [
             'Ученые', 'Исследователи', 'Инженеры', 'Археологи', 'Астрономы', 'Экологи',
@@ -944,6 +1018,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             return String(Math.floor(Math.random() * (max - min + 1)) + min);
         }
         function getContent(layerName, existingLen) {
+            var _a;
             const n = layerName.toLowerCase();
             if (n.includes('*team-box'))
                 return params.fillTeamBox ? pick(BOXERS) : null;
@@ -951,6 +1026,8 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 return params.fillTeamTennis ? pick(TENNIS_PLAYERS) : null;
             if (n.includes('*team-soccer'))
                 return params.fillTeamSoccer ? pick(SOCCER_TEAMS) : null;
+            if (n.includes('*country'))
+                return params.fillCountry ? pick(COUNTRIES) : null;
             if (n.includes('*anons'))
                 return params.fillAnons ? pick(ANNOUNCEMENTS) : null;
             if (n.includes('*article-title-description'))
@@ -966,7 +1043,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             if (n.includes('*photo-description') && params.fillPhotoDesc)
                 return generatePhotoDescription();
             if (n.includes('*description') && params.fillDescription)
-                return pickAiDesc() ?? generateDescription();
+                return (_a = pickAiDesc()) !== null && _a !== void 0 ? _a : generateDescription();
             if (n.includes('*author') && params.fillAuthor)
                 return generateAuthor();
             if (n.includes('*datetime-num') && params.fillDatetime)
@@ -986,19 +1063,20 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             }
             return null;
         }
-        const targets = ['*team-box', '*team-tennis', '*team-soccer', '*anons', '*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
+        const targets = ['*country', '*team-box', '*team-tennis', '*team-soccer', '*anons', '*article-title-description', '*news-time', '*news', '*category-lenta', '*category-gazeta', '*photo-description', '*description', '*author', '*date', '*time', '*datetime-num', '*rnd', '*text', '*quote'];
         function isFontName(value) {
             return typeof value === 'object' && value !== null &&
                 typeof value.family === 'string' &&
-                typeof value.style === 'string';
+                typeof value.style === 'string' &&
+                value.family.trim().length > 0 && value.style.trim().length > 0;
         }
         async function loadAllFontsForNode(node) {
             const len = node.characters.length;
             if (len === 0)
                 return;
-            // Pixso exposes getRangeAllFontNames specifically for mixed-style text.
+            // Figma exposes getRangeAllFontNames specifically for mixed-style text.
             // Do not pass getRangeFontName() blindly to loadFontAsync(): when the
-            // range is mixed Pixso may return pixso.mixed (a Symbol at runtime).
+            // range is mixed Figma may return figma.mixed (a Symbol at runtime).
             const rangeFonts = node.getRangeAllFontNames(0, len);
             const fonts = new Map();
             for (const fn of rangeFonts) {
@@ -1006,15 +1084,22 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                     continue;
                 fonts.set(fn.family + '|' + fn.style, { family: fn.family, style: fn.style });
             }
-            // Defensive fallback for files imported from Figma / unusual Pixso text.
+            // Fallback for text with a concrete font but no reported range fonts.
             // Some documents can report an empty list although fontName is concrete.
             if (fonts.size === 0) {
                 const fn = node.fontName;
                 if (isFontName(fn))
                     fonts.set(fn.family + '|' + fn.style, { family: fn.family, style: fn.style });
             }
+            if (fonts.size === 0)
+                throw new Error('Не удалось определить семейство шрифта');
             for (const fn of fonts.values()) {
-                await pixso.loadFontAsync(fn);
+                try {
+                    await figma.loadFontAsync(fn);
+                }
+                catch (error) {
+                    throw new Error('Не удалось загрузить шрифт «' + fn.family + ' / ' + fn.style + '»: ' + String(error));
+                }
             }
         }
         function concreteFontForRange(node, start, end) {
@@ -1055,8 +1140,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             if (len === 0)
                 return;
             await loadAllFontsForNode(node);
-            // Do not pass Pixso's extra font hash back to setRangeFontName:
-            // it can resolve Medium to Black even when the style field is correct.
+            // Capture concrete font family/style and both original text styles before editing.
             const firstStyle = captureRangeStyle(node, 0, 1);
             const secondStyle = captureRangeStyle(node, len - 1, len);
             const captureExtra = (start) => ({
@@ -1067,22 +1151,32 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             });
             const firstExtra = captureExtra(0);
             const secondExtra = captureExtra(len - 1);
+            // A linked style may reference a different font than a local override.
+            // Preload those fonts before replacing characters or applying styles.
+            for (const id of new Set([firstExtra.textStyleId, secondExtra.textStyleId])) {
+                if (typeof id !== 'string' || !id)
+                    continue;
+                const linked = await figma.getStyleByIdAsync(id);
+                if ((linked === null || linked === void 0 ? void 0 : linked.type) === 'TEXT') {
+                    await figma.loadFontAsync(linked.fontName);
+                }
+            }
             const [first, second] = pick(ARTICLE_TITLES);
             const firstPart = first + ' ';
             node.characters = firstPart + second;
-            const restore = (start, end, style, extra) => {
+            const restore = async (start, end, style, extra) => {
                 if (typeof extra.textStyleId === 'string')
-                    node.setRangeTextStyleId(start, end, extra.textStyleId);
+                    await node.setRangeTextStyleIdAsync(start, end, extra.textStyleId);
                 if (typeof extra.fillStyleId === 'string')
-                    node.setRangeFillStyleId(start, end, extra.fillStyleId);
+                    await node.setRangeFillStyleIdAsync(start, end, extra.fillStyleId);
                 applyRangeStyle(node, start, end, style);
                 if (typeof extra.textCase === 'string')
                     node.setRangeTextCase(start, end, extra.textCase);
                 if (typeof extra.textDecoration === 'string')
                     node.setRangeTextDecoration(start, end, extra.textDecoration);
             };
-            restore(0, firstPart.length, firstStyle, firstExtra);
-            restore(firstPart.length, node.characters.length, secondStyle, secondExtra);
+            await restore(0, firstPart.length, firstStyle, firstExtra);
+            await restore(firstPart.length, node.characters.length, secondStyle, secondExtra);
             affectedNodes.push(node);
         }
         async function processNewsTime(node) {
@@ -1112,9 +1206,9 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             node.characters = newText;
             // Load only concrete fonts. Mixed values must never reach loadFontAsync.
             if (headlineStyle.fontName != null)
-                await pixso.loadFontAsync(headlineStyle.fontName);
+                await figma.loadFontAsync(headlineStyle.fontName);
             if (timeStyle.fontName != null)
-                await pixso.loadFontAsync(timeStyle.fontName);
+                await figma.loadFontAsync(timeStyle.fontName);
             // Apply headline style to headline part
             applyRangeStyle(node, 0, newHeadline.length, headlineStyle);
             // Apply time style to time part
@@ -1132,26 +1226,22 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             };
             const isMarked = (name) => cleanName(name).endsWith(marker);
             const props = instance.componentProperties || {};
-            const mainComponent = instance.mainComponent;
+            const mainComponent = await instance.getMainComponentAsync();
             if (mainComponent == null) {
-                console.log('[Rambler-Content][Pixso] mainComponent is null', instance.name);
+                console.log('[Rambler-Content][Figma] mainComponent is null', instance.name);
                 return;
             }
             const componentSet = mainComponent.parent && mainComponent.parent.type === 'COMPONENT_SET'
                 ? mainComponent.parent
                 : null;
-            // IMPORTANT: Pixso throws "Node can't be a variant!" when
-            // componentPropertyDefinitions is read from a ComponentNode that itself is
-            // a variant inside a ComponentSet. Therefore definitions are read ONLY from
-            // the ComponentSet. Never touch mainComponent.componentPropertyDefinitions
-            // for variant components.
+            // Variant axes and available values belong to the parent component set.
             let setDefs = {};
             if (componentSet) {
                 try {
                     setDefs = componentSet.componentPropertyDefinitions || {};
                 }
                 catch (error) {
-                    console.log('[Rambler-Content][Pixso] component set definitions unavailable', {
+                    console.log('[Rambler-Content][Figma] component set definitions unavailable', {
                         instance: instance.name,
                         error: error instanceof Error ? error.message : String(error),
                     });
@@ -1206,7 +1296,7 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                         changes[apiKey] = pick(pool);
                     }
                     else {
-                        console.log('[Rambler-Content][Pixso] No variant options for', {
+                        console.log('[Rambler-Content][Figma] No variant options for', {
                             instance: instance.name,
                             apiKey,
                             current: prop.value,
@@ -1220,17 +1310,16 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                 }
             }
             if (Object.keys(changes).length === 0) {
-                console.log('[Rambler-Content][Pixso] No marked component properties found', {
+                console.log('[Rambler-Content][Figma] No marked component properties found', {
                     instance: instance.name,
                     componentProperties: props,
                     mainVariantProperties: mainComponent.variantProperties,
                 });
                 return;
             }
-            // Pixso can silently ignore a partial variant combination. Include
-            // unchanged variant axes (such as Size) whenever changing a variant.
-            const propertiesToApply = { ...changes };
-            if (Object.keys(changes).some(key => props[key]?.type === 'VARIANT')) {
+            // Preserve all unmarked axes (such as Size) in the chosen combination.
+            const propertiesToApply = Object.assign({}, changes);
+            if (Object.keys(changes).some(key => { var _a; return ((_a = props[key]) === null || _a === void 0 ? void 0 : _a.type) === 'VARIANT'; })) {
                 for (const key of Object.keys(props)) {
                     if (props[key].type === 'VARIANT' && !(key in propertiesToApply)) {
                         propertiesToApply[key] = String(props[key].value);
@@ -1240,18 +1329,18 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
             try {
                 instance.setProperties(propertiesToApply);
                 const actual = instance.componentProperties || {};
-                const unapplied = Object.keys(propertiesToApply).filter(key => actual[key]?.value !== propertiesToApply[key]);
+                const unapplied = Object.keys(propertiesToApply).filter(key => { var _a; return ((_a = actual[key]) === null || _a === void 0 ? void 0 : _a.value) !== propertiesToApply[key]; });
                 if (unapplied.length > 0) {
                     throw new Error('Не удалось изменить свойства ' + instance.name + ': ' + unapplied.join(', '));
                 }
                 affectedNodes.push(instance);
-                console.log('[Rambler-Content][Pixso] Applied *** properties', {
+                console.log('[Rambler-Content][Figma] Applied *** properties', {
                     instance: instance.name,
                     changes,
                 });
             }
             catch (error) {
-                console.log('[Rambler-Content][Pixso] setProperties failed', {
+                console.log('[Rambler-Content][Figma] setProperties failed', {
                     instance: instance.name,
                     changes,
                     error: error instanceof Error ? error.message : String(error),
@@ -1261,42 +1350,64 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
         }
         // Collect *img nodes for image replacement
         const imgNodesToFill = [];
+        const layerErrors = [];
+        const visited = new Set();
+        function reportLayerError(node, error) {
+            const path = [node.name];
+            let parent = node.parent;
+            while (parent && parent.type !== 'PAGE' && parent.type !== 'DOCUMENT') {
+                path.unshift(parent.name);
+                parent = parent.parent;
+            }
+            const message = path.join(' → ') + ': ' + (error instanceof Error ? error.message : String(error));
+            layerErrors.push(message);
+            console.error('[Content filler][Figma] layer failed', { id: node.id, path: path.join(' → '), error });
+        }
         async function processNode(node) {
+            const key = node.id || node;
+            if (visited.has(key))
+                return;
+            visited.add(key);
             const nameLower = node.name.toLowerCase();
             // Collect *img nodes (any node with fills, not TEXT)
             if (params.fillImg && nameLower.includes('*img') && node.type !== 'TEXT' && 'fills' in node) {
                 imgNodesToFill.push(node);
             }
-            if (node.type === 'TEXT') {
-                const isTarget = targets.some((t) => nameLower.includes(t));
-                if (!isTarget) {
-                    // skip text nodes that don't match
-                }
-                else if (nameLower.includes('*article-title-description')) {
-                    if (params.fillArticle)
-                        await processArticleTitle(node);
-                }
-                else if (nameLower.includes('*news-time') && params.fillNews) {
-                    await processNewsTime(node);
-                }
-                else {
-                    const len = node.characters.length;
-                    const content = getContent(node.name, len);
-                    if (content != null) {
-                        if (len > 0) {
-                            await loadAllFontsForNode(node);
-                            node.characters = content;
-                            affectedNodes.push(node);
+            try {
+                if (node.type === 'TEXT') {
+                    const isTarget = targets.some((t) => nameLower.includes(t));
+                    if (!isTarget) {
+                        // skip text nodes that don't match
+                    }
+                    else if (nameLower.includes('*article-title-description')) {
+                        if (params.fillArticle)
+                            await processArticleTitle(node);
+                    }
+                    else if (nameLower.includes('*news-time') && params.fillNews) {
+                        await processNewsTime(node);
+                    }
+                    else {
+                        const len = node.characters.length;
+                        const content = getContent(node.name, len);
+                        if (content != null) {
+                            if (len > 0) {
+                                await loadAllFontsForNode(node);
+                                node.characters = content;
+                                affectedNodes.push(node);
+                            }
                         }
                     }
                 }
+                // Randomize *** properties on instances
+                if (params.randomizeChange && node.type === 'INSTANCE' && node.name.trim().endsWith('***')) {
+                    await randomizeChangeProps(node);
+                }
             }
-            // Randomize *** properties on instances
-            if (params.randomizeChange && node.type === 'INSTANCE' && node.name.trim().endsWith('***')) {
-                await randomizeChangeProps(node);
+            catch (error) {
+                reportLayerError(node, error);
             }
             if ('children' in node) {
-                for (const child of node.children) {
+                for (const child of [...node.children]) {
                     await processNode(child);
                 }
             }
@@ -1304,16 +1415,12 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
         for (const sel of selection) {
             await processNode(sel);
         }
-        // Pixso's sandbox creates images from bytes. The UI iframe downloads the JPEG
+        // Figma's sandbox creates images from bytes. The UI iframe downloads the JPEG
         // (browser fetch is available there) and returns Uint8Array to the sandbox.
         if (imgNodesToFill.length > 0) {
             for (const imgNode of imgNodesToFill) {
-                const num = 1 + Math.floor(Math.random() * 220);
-                const padded = String(num).padStart(5, '0');
-                const url = 'https://lbbot.ru/img-' + padded + '.jpg';
                 try {
-                    const bytes = await requestImageBytes(url);
-                    const image = pixso.createImage(bytes);
+                    const image = await loadRandomImage();
                     if ('fills' in imgNode) {
                         const existingFills = imgNode.fills;
                         const fillsArr = Array.isArray(existingFills) ? [...existingFills] : [];
@@ -1332,12 +1439,35 @@ async function action_fill(params, target, _previousState, aiHeadlines, aiDescri
                     }
                 }
                 catch (error) {
-                    console.log('[Content filler][Pixso] image load failed', url, error);
+                    reportLayerError(imgNode, error);
                 }
             }
         }
+        if (layerErrors.length > 0) {
+            figma.notify('Не удалось заполнить слоёв: ' + layerErrors.length + '. ' + layerErrors[0], { error: true, timeout: 10000 });
+        }
     })();
     return { affectedNodes, state: null };
+}
+// Retry unavailable files with a different random number, without duplicates.
+async function loadRandomImage() {
+    const candidates = Array.from({ length: 220 }, (_, i) => i + 1);
+    const maxAttempts = 8;
+    let lastError = '';
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const index = Math.floor(Math.random() * candidates.length);
+        const [num] = candidates.splice(index, 1);
+        const url = 'https://lbbot.shop/img-' + String(num).padStart(5, '0') + '.jpg';
+        try {
+            const bytes = await requestImageBytes(url);
+            return figma.createImage(bytes);
+        }
+        catch (error) {
+            lastError = error instanceof Error ? error.message : String(error);
+            console.warn('[Content filler][Figma] image attempt failed', { attempt: attempt + 1, url, error });
+        }
+    }
+    throw new Error('Не удалось загрузить картинку после ' + maxAttempts + ' попыток: ' + lastError);
 }
 const imageRequests = new Map();
 let imageRequestSeq = 0;
@@ -1345,7 +1475,7 @@ function requestImageBytes(url) {
     const requestId = 'img-' + (++imageRequestSeq);
     return new Promise((resolve, reject) => {
         imageRequests.set(requestId, { resolve, reject });
-        pixso.ui.postMessage({ type: 'fetch-image', requestId, url });
+        figma.ui.postMessage({ type: 'fetch-image', requestId, url });
     });
 }
 let pendingAiHeadlines;
@@ -1361,17 +1491,16 @@ async function runAction_fill(target) {
     }
     catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        pixso.notify(message, { error: true });
-        throw error;
+        figma.notify(message, { error: true });
     }
     finally {
         isExecuting = false;
     }
 }
 function pushActionStates() {
-    const selection = pixso.currentPage.selection;
-    const enabled_fill = evaluateEnabled_fill(pixso.currentPage.selection);
-    pixso.ui.postMessage({
+    const selection = figma.currentPage.selection;
+    const enabled_fill = evaluateEnabled_fill(figma.currentPage.selection);
+    figma.ui.postMessage({
         type: 'action-state',
         actions: {
             "fill": { enabled: enabled_fill, label: "Fill content", status: status_fill(selection, enabled_fill) },
@@ -1386,16 +1515,16 @@ function refreshSelection() {
 const initialParams = DEFAULTS;
 latestParams = initialParams;
 const html = __html__;
-pixso.root.setRelaunchData({ [TOOL_ID]: DISPLAY_NAME });
-pixso.showUI(html, { width: 280, height: 320 });
+figma.root.setRelaunchData({ [TOOL_ID]: DISPLAY_NAME });
+figma.showUI(html, { width: 280, height: 320 });
 async function pushSavedSettings() {
     try {
         const [apiKey, aiPrompt, useAi] = await Promise.all([
-            pixso.clientStorage.getAsync('openai-api-key'),
-            pixso.clientStorage.getAsync('ai-prompt'),
-            pixso.clientStorage.getAsync('use-ai'),
+            figma.clientStorage.getAsync('openai-api-key'),
+            figma.clientStorage.getAsync('ai-prompt'),
+            figma.clientStorage.getAsync('use-ai'),
         ]);
-        pixso.ui.postMessage({
+        figma.ui.postMessage({
             type: 'saved-settings',
             apiKey: typeof apiKey === 'string' ? apiKey : '',
             aiPrompt: typeof aiPrompt === 'string' ? aiPrompt : '',
@@ -1403,13 +1532,13 @@ async function pushSavedSettings() {
         });
     }
     catch (error) {
-        console.log('[Content filler][Pixso] failed to load client settings', error);
+        console.log('[Content filler][Figma] failed to load client settings', error);
     }
 }
 void pushSavedSettings();
 pushActionStates();
-pixso.on('selectionchange', refreshSelection);
-pixso.ui.onmessage = async (msg) => {
+figma.on('selectionchange', refreshSelection);
+figma.ui.onmessage = async (msg) => {
     if (msg.type === 'request-settings') {
         await pushSavedSettings();
         return;
@@ -1417,13 +1546,13 @@ pixso.ui.onmessage = async (msg) => {
     if (msg.type === 'save-settings') {
         try {
             await Promise.all([
-                pixso.clientStorage.setAsync('openai-api-key', msg.apiKey),
-                pixso.clientStorage.setAsync('ai-prompt', msg.aiPrompt),
-                pixso.clientStorage.setAsync('use-ai', msg.useAi),
+                figma.clientStorage.setAsync('openai-api-key', msg.apiKey),
+                figma.clientStorage.setAsync('ai-prompt', msg.aiPrompt),
+                figma.clientStorage.setAsync('use-ai', msg.useAi),
             ]);
         }
         catch (error) {
-            console.log('[Content filler][Pixso] failed to save client settings', error);
+            console.log('[Content filler][Figma] failed to save client settings', error);
         }
         return;
     }
@@ -1439,7 +1568,7 @@ pixso.ui.onmessage = async (msg) => {
         return;
     }
     if (msg.type === 'resize') {
-        pixso.ui.resize(280, Math.max(120, Math.min(900, Math.round(msg.height))));
+        figma.ui.resize(280, Math.max(120, Math.min(900, Math.round(msg.height))));
         return;
     }
     if (msg.type === 'action') {

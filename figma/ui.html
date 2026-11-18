@@ -214,12 +214,24 @@
       backdrop-filter: blur(8px);
     }
 
+    .footer-randomize {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      white-space: nowrap;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .footer-randomize > label:first-child { cursor: pointer; }
+
     #status-fill {
+      grid-column: 1 / -1;
       min-width: 0;
       color: var(--muted);
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow-wrap: anywhere;
     }
 
     .button {
@@ -272,6 +284,7 @@
         <button id="toggle-all-fill" class="reset-button" type="button">Выключить все</button>
 
         <div class="field"><label for="fill-news">Новость</label><label class="switch"><input id="fill-news" type="checkbox" checked><span class="switch-track"></span></label></div>
+        <div class="field"><label for="fill-country">Страна</label><label class="switch"><input id="fill-country" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-anons">Анонс</label><label class="switch"><input id="fill-anons" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-article">Статья</label><label class="switch"><input id="fill-article" type="checkbox" checked><span class="switch-track"></span></label></div>
         <div class="field"><label for="fill-description">Описание</label><label class="switch"><input id="fill-description" type="checkbox" checked><span class="switch-track"></span></label></div>
@@ -306,7 +319,6 @@
           <label for="prefix-probability">Вероятность, %</label>
           <div class="field-control"><input id="prefix-probability" class="text-input" type="number" min="0" max="100" step="1" value="20"></div>
         </div>
-        <div class="field"><label for="randomize-change">🔀 Randomize ***</label><label class="switch"><input id="randomize-change" type="checkbox"><span class="switch-track"></span></label></div>
       </details>
 
       <details class="group">
@@ -331,8 +343,9 @@
     </main>
 
     <footer class="footer">
-      <label id="status-fill">Select a frame</label>
+      <div class="footer-randomize"><label for="randomize-change">Randomize ***</label><label class="switch"><input id="randomize-change" type="checkbox"><span class="switch-track"></span></label></div>
       <button id="action-fill" class="button" type="button" disabled>Fill content</button>
+      <div id="status-fill" role="status" aria-live="polite" hidden></div>
     </footer>
   </div>
 
@@ -417,6 +430,7 @@
         fillTeamBox: document.getElementById('fill-team-box').checked === true,
         fillTeamTennis: document.getElementById('fill-team-tennis').checked === true,
         fillTeamSoccer: document.getElementById('fill-team-soccer').checked === true,
+        fillCountry: document.getElementById('fill-country').checked === true,
         fillAnons: document.getElementById('fill-anons').checked === true,
         fillArticle: document.getElementById('fill-article').checked === true,
         fillDescription: document.getElementById('fill-description').checked === true,
@@ -431,7 +445,7 @@
         fillImg: document.getElementById('fill-img').checked === true,
       }
     }
-    // Persist OpenAI settings in Pixso clientStorage via the plugin sandbox.
+    // Persist OpenAI settings in Figma clientStorage via the plugin sandbox.
     // The UI runs with a null origin in production, so localStorage is not reliable.
     const apiKeyInput = document.getElementById('api-key')
     const aiPromptInput = document.getElementById('ai-prompt')
@@ -505,6 +519,8 @@
     const statusLabel = document.getElementById('status-fill')
 
     document.getElementById('action-fill').addEventListener('click', async () => {
+      statusLabel.hidden = true
+      statusLabel.textContent = ''
       const params = currentParams()
       const useAi = document.getElementById('use-ai').checked === true
       const apiKey = apiKeyInput.value.trim()
@@ -512,11 +528,12 @@
       if (useAi && apiKey) {
         fillButton.setAttribute('disabled', '')
         fillButton.textContent = 'Генерация AI...'
+        statusLabel.hidden = false
         statusLabel.textContent = 'Запрос к OpenAI...'
         try {
           const userPrompt = aiPromptInput.value.trim()
           const ai = await fetchAiContent(apiKey, userPrompt)
-          statusLabel.textContent = 'Получено ' + ai.headlines.length + ' заголовков'
+          statusLabel.hidden = true
           parent.postMessage({
             pluginMessage: {
               type: 'action', id: 'fill', params: params,
@@ -525,6 +542,7 @@
             }
           }, '*')
         } catch (err) {
+          statusLabel.hidden = false
           statusLabel.textContent = 'Ошибка: ' + (err.message || err)
           fillButton.removeAttribute('disabled')
           fillButton.textContent = 'Fill content'
@@ -536,22 +554,28 @@
 
 
 
-    // Pixso sandbox cannot fetch remote images directly. Download in iframe and
-    // return bytes to code.ts, where pixso.createImage(Uint8Array) is available.
+    // Figma sandbox cannot fetch remote images directly. Download in iframe and
+    // return bytes to code.ts, where figma.createImage(Uint8Array) is available.
     window.addEventListener('message', async (event) => {
       const msg = event.data && event.data.pluginMessage
       if (!msg || msg.type !== 'fetch-image' || !msg.requestId || !msg.url) return
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 10000)
       try {
-        const response = await fetch(msg.url)
+        const response = await fetch(msg.url, { signal: controller.signal })
         if (!response.ok) throw new Error('HTTP ' + response.status)
+        const contentType = response.headers.get('content-type') || ''
+        if (contentType.toLowerCase().includes('text/html')) throw new Error('Сервер вернул HTML вместо картинки')
         const bytes = new Uint8Array(await response.arrayBuffer())
         parent.postMessage({ pluginMessage: { type: 'image-bytes', requestId: msg.requestId, bytes } }, '*')
       } catch (error) {
         const raw = String(error && error.message ? error.message : error)
         const corsHint = raw === 'Failed to fetch' || /fetch/i.test(raw)
-          ? 'Не удалось скачать изображение. Для Pixso production UI (origin null) сервер картинки должен разрешать CORS, например Access-Control-Allow-Origin: *'
+          ? 'Не удалось скачать изображение. Для Figma production UI (origin null) сервер картинки должен разрешать CORS, например Access-Control-Allow-Origin: *'
           : raw
         parent.postMessage({ pluginMessage: { type: 'image-bytes', requestId: msg.requestId, error: corsHint } }, '*')
+      } finally {
+        clearTimeout(timeout)
       }
     })
 
@@ -569,8 +593,7 @@
           else button.removeAttribute('disabled')
           if (typeof a.label === 'string') button.textContent = a.label
         }
-        const status = document.getElementById('status-fill')
-        if (a && status && typeof a.status === 'string') status.textContent = a.status
+        if (a && button && typeof a.status === 'string') button.title = a.status
       }
     })
 

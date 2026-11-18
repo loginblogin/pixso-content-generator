@@ -1,8 +1,9 @@
 {
   "name": "Content filler",
-  "id": "af0398dd-709d-4944-86ed-4a2b25a8847c",
   "api": "1.0.0",
-  "editorType": ["pixso"],
+  "editorType": [
+    "figma"
+  ],
   "main": "code.js",
   "ui": "ui.html",
   "menu": [
@@ -17,5 +18,13 @@
       "name": "Content filler",
       "multipleSelection": true
     }
-  ]
+  ],
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": [
+      "https://api.openai.com",
+      "https://lbbot.shop"
+    ]
+  },
+  "id": "1686395157477216847"
 }

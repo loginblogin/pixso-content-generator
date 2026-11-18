@@ -1,0 +1,14 @@
+{
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.139.0",
+    "typescript": "^5.8.3"
+  },
+  "name": "figma-content-filler",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "tsc",
+    "test": "node tests/smoke.cjs"
+  }
+}
