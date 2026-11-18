@@ -1179,21 +1179,41 @@ async function action_fill(params: Params, target: SceneNode | null, _previousSt
       })
       const firstExtra = captureExtra(0)
       const secondExtra = captureExtra(len - 1)
-      // A linked style may reference a different font than a local override.
-      // Preload those fonts before replacing characters or applying styles.
-      for (const id of new Set([firstExtra.textStyleId, secondExtra.textStyleId])) {
+      // Deleted/unavailable shared styles must not prevent restoring concrete
+      // appearance captured from the original characters.
+      const availableStyles = new Map<string, 'TEXT' | 'PAINT'>()
+      for (const id of new Set([firstExtra.textStyleId, secondExtra.textStyleId, firstExtra.fillStyleId, secondExtra.fillStyleId])) {
         if (typeof id !== 'string' || !id) continue
-        const linked = await figma.getStyleByIdAsync(id)
-        if (linked?.type === 'TEXT') {
-          await figma.loadFontAsync(linked.fontName)
+        try {
+          const linked = await figma.getStyleByIdAsync(id)
+          if (linked?.type === 'TEXT') {
+            await figma.loadFontAsync(linked.fontName)
+            availableStyles.set(id, 'TEXT')
+          } else if (linked?.type === 'PAINT') {
+            availableStyles.set(id, 'PAINT')
+          }
+        } catch (error) {
+          console.warn('[Content filler][Figma] shared style unavailable; restoring appearance', { id, error })
         }
       }
       const [first, second] = pick(ARTICLE_TITLES)
       const firstPart = first + ' '
       node.characters = firstPart + second
       const restore = async (start: number, end: number, style: RangeStyle, extra: ReturnType<typeof captureExtra>): Promise<void> => {
-        if (typeof extra.textStyleId === 'string') await node.setRangeTextStyleIdAsync(start, end, extra.textStyleId)
-        if (typeof extra.fillStyleId === 'string') await node.setRangeFillStyleIdAsync(start, end, extra.fillStyleId)
+        if (typeof extra.textStyleId === 'string' && availableStyles.get(extra.textStyleId) === 'TEXT') {
+          try {
+            await node.setRangeTextStyleIdAsync(start, end, extra.textStyleId)
+          } catch (error) {
+            console.warn('[Content filler][Figma] cannot restore text style; restoring appearance', { id: extra.textStyleId, error })
+          }
+        }
+        if (typeof extra.fillStyleId === 'string' && availableStyles.get(extra.fillStyleId) === 'PAINT') {
+          try {
+            await node.setRangeFillStyleIdAsync(start, end, extra.fillStyleId)
+          } catch (error) {
+            console.warn('[Content filler][Figma] cannot restore fill style; restoring appearance', { id: extra.fillStyleId, error })
+          }
+        }
         applyRangeStyle(node, start, end, style)
         if (typeof extra.textCase === 'string') node.setRangeTextCase(start, end, extra.textCase as TextCase)
         if (typeof extra.textDecoration === 'string') node.setRangeTextDecoration(start, end, extra.textDecoration as TextDecoration)

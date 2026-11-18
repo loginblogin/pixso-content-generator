@@ -49,6 +49,22 @@ async function fill(nodes, params={}, descriptions) {
   const article=nodes[3];assert(article.characters.length>=80&&article.characters.length<=130);
   const second=article.styles.find(s=>s[0]==='textStyle'&&s[3]==='second');assert(second);assert.equal(second[2],article.characters.length);
   assert(article.styles.some(s=>s[0]==='FontName'&&s[1]===second[1]&&s[3].style==='Regular'));
+  const originalGetStyle=figma.getStyleByIdAsync;
+  for (const mode of ['deleted','lookup-error','apply-error']) {
+    const n=text('*article-title-description');n.getRangeFillStyleId=()=> 'paint';
+    figma.getStyleByIdAsync=async id=>{
+      if(mode==='lookup-error')throw Error('Unavailable style');
+      if(mode==='deleted')return null;
+      return id==='paint'?{type:'PAINT'}:{type:'TEXT',fontName:{family:'Inter',style:'Regular'}};
+    };
+    n.setRangeTextStyleIdAsync=async()=>{throw Error('Cannot set deleted style')};
+    n.setRangeFillStyleIdAsync=async()=>{throw Error('Cannot set deleted style')};
+    const beforeErrors=errors.length;await fill([n]);assert.equal(errors.length,beforeErrors);
+    assert(n.characters.length>=80&&n.characters.length<=130);
+    const secondFont=n.styles.find(s=>s[0]==='FontName'&&s[1]>0);assert(secondFont);assert.equal(secondFont[3].style,'Regular');
+    assert(n.styles.some(s=>s[0]==='Fills'&&s[1]===secondFont[1]&&s[3][0].color.r===0.6));
+  }
+  figma.getStyleByIdAsync=originalGetStyle;
   const disabled=markers.map(m=>text(m));const off=vm.runInContext('Object.fromEntries(Object.keys(DEFAULTS).filter(k=>k.startsWith("fill")).map(k=>[k,false]))',context);await fill(disabled,off);assert(disabled.every(n=>n.characters==='Original   12:00'));
   const untouched=text('news');await fill([untouched]);assert.equal(untouched.characters,'Original   12:00');
   const ai=text('*description');await fill([ai],{},['AI description']);assert.equal(ai.characters,'AI description');
