@@ -9,6 +9,8 @@
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsc",
-    "test": "node tests/smoke.cjs"
+    "test": "node tests/smoke.cjs",
+    "precheck": "node scripts/update-article-titles.cjs",
+    "prebuild": "node scripts/update-article-titles.cjs"
   }
 }

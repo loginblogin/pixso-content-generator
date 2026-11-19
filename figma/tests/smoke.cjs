@@ -46,7 +46,9 @@ async function fill(nodes, params={}, descriptions) {
   const nodes=markers.map(m=>text(m));await fill(nodes);
   assert(nodes.every(n=>n.characters!=='Original   12:00'));
   assert(/   \d{2}:\d{2}$/.test(nodes[1].characters));
-  const article=nodes[3];assert(article.characters.length>=80&&article.characters.length<=130);
+  const entries=JSON.parse(fs.readFileSync(path.join(root,'articles_titles_subtitles_updated.json'),'utf8'));
+  const combined=new Set(entries.map(e=>e.title+' '+e.subtitle));
+  const article=nodes[3];assert(combined.has(article.characters));
   const second=article.styles.find(s=>s[0]==='textStyle'&&s[3]==='second');assert(second);assert.equal(second[2],article.characters.length);
   assert(article.styles.some(s=>s[0]==='FontName'&&s[1]===second[1]&&s[3].style==='Regular'));
   const originalGetStyle=figma.getStyleByIdAsync;
@@ -60,11 +62,20 @@ async function fill(nodes, params={}, descriptions) {
     n.setRangeTextStyleIdAsync=async()=>{throw Error('Cannot set deleted style')};
     n.setRangeFillStyleIdAsync=async()=>{throw Error('Cannot set deleted style')};
     const beforeErrors=errors.length;await fill([n]);assert.equal(errors.length,beforeErrors);
-    assert(n.characters.length>=80&&n.characters.length<=130);
+    assert(combined.has(n.characters));
     const secondFont=n.styles.find(s=>s[0]==='FontName'&&s[1]>0);assert(secondFont);assert.equal(secondFont[3].style,'Regular');
     assert(n.styles.some(s=>s[0]==='Fills'&&s[1]===secondFont[1]&&s[3][0].color.r===0.6));
   }
   figma.getStyleByIdAsync=originalGetStyle;
+  const originalRandom=vm.runInContext('Math.random',context);
+  for(let index=0;index<entries.length;index++){
+    context.articleRandom=(index+0.5)/entries.length;
+    vm.runInContext('Math.random=()=>articleRandom',context);
+    const n=text('*article-title-description');await fill([n]);
+    const entry=entries[index];assert.equal(n.characters,entry.title+' '+entry.subtitle);
+    const boundary=n.styles.find(s=>s[0]==='textStyle'&&s[3]==='second');assert.equal(boundary[1],entry.title.length+1);
+  }
+  context.originalRandom=originalRandom;vm.runInContext('Math.random=originalRandom',context);
   const disabled=markers.map(m=>text(m));const off=vm.runInContext('Object.fromEntries(Object.keys(DEFAULTS).filter(k=>k.startsWith("fill")).map(k=>[k,false]))',context);await fill(disabled,off);assert(disabled.every(n=>n.characters==='Original   12:00'));
   const untouched=text('news');await fill([untouched]);assert.equal(untouched.characters,'Original   12:00');
   const ai=text('*description');await fill([ai],{},['AI description']);assert.equal(ai.characters,'AI description');
